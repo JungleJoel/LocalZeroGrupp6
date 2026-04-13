@@ -1,0 +1,1 @@
+dotnet ef dbcontext scaffold "Host=postgres.mau.se;Port=55432;Database=localzero_group_6;Username=;Password=" Npgsql.EntityFrameworkCore.PostgreSQL -o Models/Entities -c ApplicationDbContext --context-dir Data --no-onconfiguring --force --schema public
