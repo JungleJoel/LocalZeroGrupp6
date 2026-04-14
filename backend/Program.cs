@@ -19,7 +19,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:3000")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -50,6 +50,7 @@ var app = builder.Build();
 
 app.UseCors();
 
+// Configure the HTTP request pipeline.import { Button } from "@/components/ui/button" Stashed changes
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
