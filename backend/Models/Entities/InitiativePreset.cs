@@ -13,5 +13,7 @@ public partial class InitiativePreset
 
     public DateTime CreatedAt { get; set; }
 
+    public int? EcoPointsPerParticipant { get; set; }
+
     public virtual ICollection<Initiative> Initiatives { get; set; } = new List<Initiative>();
 }

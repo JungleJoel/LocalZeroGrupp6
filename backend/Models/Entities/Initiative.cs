@@ -33,6 +33,8 @@ public partial class Initiative
 
     public DateTime CreatedAt { get; set; }
 
+    public int? EcoPointsPerParticipant { get; set; }
+
     public virtual InitiativeCategory? Category { get; set; }
 
     public virtual Community Community { get; set; } = null!;

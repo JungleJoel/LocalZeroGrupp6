@@ -216,6 +216,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("created_at");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.EcoPointsPerParticipant).HasColumnName("eco_points_per_participant");
             entity.Property(e => e.EndedAt).HasColumnName("ended_at");
             entity.Property(e => e.EstimatedEndsAt).HasColumnName("estimated_ends_at");
             entity.Property(e => e.IsPublic).HasColumnName("is_public");
@@ -376,6 +377,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.EcoPointsPerParticipant).HasColumnName("eco_points_per_participant");
             entity.Property(e => e.Name).HasColumnName("name");
         });
 
