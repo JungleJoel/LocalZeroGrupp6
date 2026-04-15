@@ -21,6 +21,13 @@ namespace backend.Controllers
             _authService = authService;
         }
 
+        [Authorize]
+        [HttpGet("check-auth")]
+        public async Task<IActionResult> CheckAuth()
+        {
+            return Ok();
+        }
+
         [UnauthorizedOnly]
         [HttpPost("login")]
         public async Task<ActionResult<UserDTO>> Login([FromBody] LoginRequestDTO request)

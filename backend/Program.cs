@@ -28,6 +28,7 @@ builder.Services.AddCors(options => {
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
+        options.Cookie.Name = "LocalZeroCookie";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
         options.Events.OnRedirectToLogin = ctx => {
