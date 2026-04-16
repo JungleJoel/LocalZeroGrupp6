@@ -22,7 +22,7 @@ namespace backend.Controllers
         }
 
         [Authorize]
-        [HttpGet("check-auth")]asd
+        [HttpGet("check-auth")]
         public async Task<IActionResult> CheckAuth()
         {
             return Ok();
