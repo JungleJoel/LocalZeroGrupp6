@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using backend.Models;
 
 namespace backend.Controllers
 {
@@ -26,11 +27,18 @@ namespace backend.Controllers
         public async Task<ActionResult<UserDTO>> Login([FromBody] LoginRequestDTO request)
         {
             var user = await _authService.AuthenticateAsync(request);
-
+            var isManager = await _authService.IsManagerAtLoginAsync(user.Id);
+            
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            
+            };
+            
+            if (isManager)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "CommunityManager"));
+            }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -39,7 +47,7 @@ namespace backend.Controllers
 
             return Ok(user);
         }
-
+        
         [UnauthorizedOnly]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)

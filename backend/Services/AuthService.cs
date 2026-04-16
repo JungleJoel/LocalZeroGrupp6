@@ -12,10 +12,12 @@ namespace backend.Services
     public class AuthService : IAuthService
     {
         private readonly ApplicationDbContext _database;
+        private readonly ICommunityService _communityService;
 
-        public AuthService(ApplicationDbContext database)
+        public AuthService(ApplicationDbContext database, ICommunityService communityService)
         {
             _database = database;
+            _communityService = communityService;
         }
 
         public async Task<UserDTO> AuthenticateAsync(LoginRequestDTO request)
@@ -57,6 +59,12 @@ namespace backend.Services
             await _database.SaveChangesAsync();
 
             return user.Adapt<UserDTO>();
+        }
+
+        public async Task<bool> IsManagerAtLoginAsync(Guid userId)
+        {
+            var userCommunity = await _communityService.GetUserCommunityAsync(userId);
+            return userCommunity.Any(community => community.IsManager);
         }
     }
 }

@@ -7,5 +7,6 @@ namespace backend.Interfaces
     {
         Task<UserDTO> AuthenticateAsync(LoginRequestDTO request);
         Task<UserDTO> RegisterAsync(RegisterRequestDTO request);
+        Task<bool> IsManagerAtLoginAsync(Guid userId);
     }
 }
