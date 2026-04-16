@@ -58,7 +58,7 @@ public class CommunityService : ICommunityService
             UserId = userId,
             CommunityId = communityId,
             IsAccepted = null,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now
         };
         
         await _database.CommunityJoinRequests.AddAsync(joinRequest);
@@ -84,7 +84,7 @@ public class CommunityService : ICommunityService
         await IsManagerAsync(managerUserId, communityId);
         
         var request = await _database.CommunityJoinRequests
-            .FirstOrDefaultAsync(resident => resident.UserId == managerUserId && resident.CommunityId == communityId);
+            .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
         
         if(request == null)
             throw new NotFoundException("Request not found");
@@ -125,7 +125,7 @@ public class CommunityService : ICommunityService
         await IsManagerAsync(managerUserId, communityId);
         
         var request = await _database.CommunityJoinRequests
-            .FirstOrDefaultAsync(resident => resident.UserId == managerUserId && resident.CommunityId == communityId);
+            .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
 
         if(request == null)
             throw new NotFoundException("Request not found");
