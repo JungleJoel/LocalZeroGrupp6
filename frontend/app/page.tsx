@@ -11,6 +11,9 @@ export default function Page() {
       <Link href="/home">
         <Button>/home (protected)</Button>
       </Link>
+      <Link href="/auth/register">
+        <Button>/auth/register (protected)</Button>
+      </Link>
     </div>
   );
 }
