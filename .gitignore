@@ -760,3 +760,8 @@ sketch
 
 
 backend/appsettings.Development.json
+backend/Models/Entities/*
+
+
+.next/
+
