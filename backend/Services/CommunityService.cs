@@ -58,7 +58,7 @@ public class CommunityService : ICommunityService
             UserId = userId,
             CommunityId = communityId,
             IsAccepted = null,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
         
         await _database.CommunityJoinRequests.AddAsync(joinRequest);
@@ -69,7 +69,12 @@ public class CommunityService : ICommunityService
 
     public async Task<List<CommunityJoinRequestDTO>> GetRequestsAsync(Guid managerUserId, Guid communityId)
     {
-        await IsManagerAsync(managerUserId, communityId);
+        bool isManager = await IsManagerAsync(managerUserId, communityId);
+
+        if (!isManager)
+        {
+            throw new ConflictException("Not a manager over this community");
+        }
         
         var requests = await  _database.CommunityJoinRequests
             .Where(resident => resident.CommunityId == communityId)
@@ -81,7 +86,12 @@ public class CommunityService : ICommunityService
     public async Task<CommunityJoinRequestDTO> ApproveRequestAsync(Guid requestId, Guid managerUserId, Guid communityId)
     {
         
-        await IsManagerAsync(managerUserId, communityId);
+        bool isManager = await IsManagerAsync(managerUserId, communityId);
+
+        if (!isManager)
+        {
+            throw new ConflictException("Not a manager over this community");
+        }
         
         var request = await _database.CommunityJoinRequests
             .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
@@ -122,7 +132,12 @@ public class CommunityService : ICommunityService
     public async Task<CommunityJoinRequestDTO> DeclineRequestAsync(Guid requestId, Guid managerUserId, Guid communityId)
     {
         
-        await IsManagerAsync(managerUserId, communityId);
+        bool isManager = await IsManagerAsync(managerUserId, communityId);
+
+        if (!isManager)
+        {
+            throw new ConflictException("Not a manager over this community");
+        }
         
         var request = await _database.CommunityJoinRequests
             .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
@@ -183,7 +198,7 @@ public class CommunityService : ICommunityService
     public async Task<bool> IsManagerAsync(Guid userId, Guid communityId)
     {
         return await _database.CommunityResidents
-            .AnyAsync(resident => resident.UserId == userId && resident.CommunityId == communityId && resident.IsManager);
+            .AnyAsync(resident => resident.UserId == userId && resident.CommunityId == communityId && resident.IsManager == true);
     }
 
     private async Task<int> CountManagersInCommunityAsync(Guid communityId)
