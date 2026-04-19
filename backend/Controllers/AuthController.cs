@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using backend.Models;
 
 namespace backend.Controllers
 {
@@ -16,17 +15,21 @@ namespace backend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IUserService userService)
         {
             _authService = authService;
+            _userService = userService;
         }
 
         [Authorize]
         [HttpGet("check-auth")]
-        public async Task<IActionResult> CheckAuth()
+        public async Task<ActionResult<UserDTO>> CheckAuth()
         {
-            return Ok();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _userService.GetAsync(userId);
+            return Ok(user);
         }
 
         [UnauthorizedOnly]

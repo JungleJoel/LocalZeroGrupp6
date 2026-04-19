@@ -13,28 +13,31 @@ namespace backend.Services
     {
         private readonly ApplicationDbContext _database;
         private readonly ICommunityService _communityService;
+        private readonly IUserService _userService;
 
-        public AuthService(ApplicationDbContext database, ICommunityService communityService)
+        public AuthService(ApplicationDbContext database, ICommunityService communityService, IUserService userService)
         {
             _database = database;
             _communityService = communityService;
+            _userService = userService;
         }
 
         public async Task<UserDTO> AuthenticateAsync(LoginRequestDTO request)
         {
-            var user = await _database.Users
+            var userEntity = await _database.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null)
+            if (userEntity == null)
             {
                 throw new UnauthorizedException("Invalid email or password.");
             }
 
-            if (BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash) == false)
+            if (BCrypt.Net.BCrypt.Verify(request.Password, userEntity.PasswordHash) == false)
             {
                 throw new UnauthorizedException("Invalid email or password.");
             }
 
+            var user = await _userService.GetAsync(userEntity.Id);
             return user.Adapt<UserDTO>();
         }
 
@@ -45,7 +48,7 @@ namespace backend.Services
             if (exists)
                 throw new ConflictException("A user with that email already exists.");
 
-            var user = new User
+            var userEntity = new User
             {
                 Id = Guid.NewGuid(),
                 FirstName = request.FirstName,
@@ -55,8 +58,10 @@ namespace backend.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            _database.Users.Add(user);
+            _database.Users.Add(userEntity);
             await _database.SaveChangesAsync();
+
+            var user = await _userService.GetAsync(userEntity.Id);
 
             return user.Adapt<UserDTO>();
         }

@@ -3,9 +3,12 @@ using backend.Interfaces;
 using backend.Middleware;
 using backend.Services;
 using DotNetEnv;
+using Mapster;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 Env.Load();
 
@@ -15,7 +18,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(Environment.GetEnvironmentVariable("DATABASE_URL")));
 
 builder.Services.AddOpenApi();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+    });
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+});
 
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
@@ -47,12 +59,14 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 
 var app = builder.Build();
 
 app.UseCors();
 
-// Configure the HTTP request pipeline.import { Button } from "@/components/ui/button" Stashed changes
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
