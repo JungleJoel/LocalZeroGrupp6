@@ -9,6 +9,7 @@ import { Users } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { RegisterRequestDTO } from "@/types/registerRequestDTO";
 
 export default function Register() {
     const [firstName, setFirstName] = useState("");
@@ -34,18 +35,20 @@ export default function Register() {
         try {
             setIsLoading(true);
 
+            const payload: RegisterRequestDTO = {
+                    firstName,
+                    lastName,
+                    email,
+                    password,
+                }
+
             const response = await fetch(`${API_BASE_URL}/Auth/register`, {
                 method: "POST",
                 credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    firstName,
-                    lastName,
-                    email,
-                    password,
-                }),
+                body: JSON.stringify(payload),
             });
 
             let data;

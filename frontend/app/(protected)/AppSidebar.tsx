@@ -1,3 +1,4 @@
+"use client";
 import { LogOutButton } from "@/components/LogOutButton";
 import { ToggleThemeButton } from "@/components/ToggleThemeButton";
 import {
@@ -6,23 +7,21 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { UserDTO } from "@/types/userDTO";
 import {
-  BarChart3,
-  Cog,
   HeartHandshake,
   Home,
   Leaf,
   MessageSquare,
   Settings,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { label: "Home", href: "/home", icon: Home },
@@ -32,7 +31,9 @@ const navItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({user}:{user: UserDTO}) {
+  const pathname = usePathname();
+
   return (
     <Sidebar>
       <SidebarHeader className="px-5 py-6">
@@ -44,8 +45,8 @@ export function AppSidebar() {
             <span className="text-base font-semibold tracking-tight">
               Local Zero
             </span>
-            <span className="text-xs text-muted-foreground">
-              Welcome back, NAME HERE
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user.firstName} 
             </span>
           </div>
         </div>
@@ -57,7 +58,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map(({ label, href, icon: Icon }) => (
                 <SidebarMenuItem key={href}>
-                  <SidebarMenuButton asChild size="lg">
+                  <SidebarMenuButton asChild size="lg" isActive={pathname === href}>
                     <Link href={href} className="gap-3 py-5">
                       <Icon className="h-6 w-6" />
                       <span className="text-base">{label}</span>

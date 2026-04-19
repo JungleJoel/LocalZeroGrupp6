@@ -8,17 +8,15 @@ export default async function ProtectedLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let isAuthenticated = false;
+  let user = await checkAuth();
 
-  isAuthenticated = await checkAuth();
-
-  if (!isAuthenticated) {
+  if (user == null) {
     redirect("/");
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarTrigger className="absolute m-2 flex md:hidden" />
       <div className="w-screen">{children}</div>
     </SidebarProvider>
