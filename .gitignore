@@ -765,3 +765,5 @@ backend/Models/Entities/*
 
 .next/
 
+backend/.env.example
+package-lock.json
