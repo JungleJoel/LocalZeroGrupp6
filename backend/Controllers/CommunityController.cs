@@ -1,9 +1,7 @@
 using System.Security.Claims;
 using backend.Interfaces;
-using backend.Models;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
-using backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,20 +10,12 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class CommunityController : ControllerBase
+public class CommunityController(ICommunityService communityService) : ControllerBase
 {
-    
-    private readonly ICommunityService _communityService;
-
-    public CommunityController(ICommunityService communityService)
-    {
-        _communityService = communityService;
-    }
-    
     [HttpGet("getCommunities")]
     public async Task<ActionResult<List<CommunityDTO>>> GetCommunities()
     {
-        var communities = await _communityService.GetCommunitiesAsync();
+        var communities = await communityService.GetCommunitiesAsync();
         return Ok(communities);
     }
     
@@ -33,24 +23,24 @@ public class CommunityController : ControllerBase
     public async Task<ActionResult<List<CommunityMembershipDTO>>> GetMyCommunity()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var community = await _communityService.GetUserCommunityAsync(userId);
+        var community = await communityService.GetUserCommunityAsync(userId);
         return Ok(community);
             
     }
 
     [HttpPost("{communityId}/join")]
-    public async Task<CommunityJoinRequestDTO> JoinCommunities(Guid communityId)
+    public async Task<ActionResult<CommunityJoinRequestDTO>> JoinCommunities(Guid communityId)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return await _communityService.SubmitJoinRequestAsync(userId, communityId);
+        return await communityService.SubmitJoinRequestAsync(userId, communityId);
     }
 
     [Authorize(Roles = "CommunityManager")]
     [HttpGet("{communityId}/get-requests")]
-    public async Task<List<CommunityJoinRequestDTO>> GetRequests(Guid  communityId)
+    public async Task<ActionResult<List<CommunityJoinRequestDTO>>> GetRequests(Guid  communityId)
     {
         var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return await _communityService.GetRequestsAsync(managerUserId, communityId);
+        return await communityService.GetRequestsAsync(managerUserId, communityId);
     }
     
     [Authorize(Roles = "CommunityManager")]
@@ -58,7 +48,7 @@ public class CommunityController : ControllerBase
     public async Task<ActionResult<CommunityJoinRequestDTO>> ApproveRequest(Guid requestId, Guid communityId)
     {
         var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return await _communityService.ApproveRequestAsync(requestId, managerUserId, communityId);
+        return await communityService.ApproveRequestAsync(requestId, managerUserId, communityId);
     }
 
     [Authorize(Roles = "CommunityManager")]
@@ -66,13 +56,33 @@ public class CommunityController : ControllerBase
     public async Task<ActionResult<CommunityJoinRequestDTO>> DeclineRequest(Guid requestId, Guid communityId)
     {
         var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return  await _communityService.DeclineRequestAsync(requestId, managerUserId, communityId);
+        return  await communityService.DeclineRequestAsync(requestId, managerUserId, communityId);
     }
 
     [HttpPost("{communityId}/leave")]
-    public async Task LeaveCommunities(Guid communityId)
+    public async Task<ActionResult> LeaveCommunities(Guid communityId)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _communityService.LeaveCommunityAsync(userId, communityId);
+        await communityService.LeaveCommunityAsync(userId, communityId);
+        return Ok();
+    }
+
+    [HttpGet("{communityId}/members")]
+    public async Task<ActionResult<List<UserDTO>>> GetCommunityMembers(Guid communityId)
+    {
+        throw new NotImplementedException();
+    }
+
+    [HttpGet("{communityId}/members/{userId}")]
+    public async Task<ActionResult<UserDTO>> GetCommunityMember(Guid communityId, Guid userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    [Authorize(Roles = "CommunityManager")]
+    [HttpPost("{communityId}/members/{userId}/remove")]
+    public async Task<ActionResult> RemoveCommunityMember(Guid communityId, Guid userId)
+    {
+        throw new NotImplementedException();
     }
 }
