@@ -67,7 +67,7 @@ public class CommunityController(ICommunityService communityService) : Controlle
         return Ok();
     }
 
-    [HttpGet("{communityId}/members")]
+    /*[HttpGet("{communityId}/members")]
     public async Task<ActionResult<List<UserDTO>>> GetCommunityMembers(Guid communityId)
     {
         throw new NotImplementedException();
@@ -84,5 +84,5 @@ public class CommunityController(ICommunityService communityService) : Controlle
     public async Task<ActionResult> RemoveCommunityMember(Guid communityId, Guid userId)
     {
         throw new NotImplementedException();
-    }
+    }*/
 }

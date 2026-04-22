@@ -1,16 +1,20 @@
 using backend.Models;
+using backend.Models.DTOs;
+using backend.Models.DTOs.Requests;
+using backend.Models.Entities;
 
 namespace backend.Interfaces;
 
 public interface IEcoPointService
 {
-    Task<EcoPointTransactionDTO> AwardPointsMemberAsync(Guid communityId, Guid userId, Guid initiativeId, int amount);
+    Task<EcoPointTransactionDTO> AwardPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO);
     
-    Task<EcoPointTransactionDTO> DeductPointsMemberAsync(Guid communityId, Guid userId, Guid initiativeId, int amount);
+    Task<EcoPointTransactionDTO> DeductPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO);
     
-    Task GetPointBalanceUserAsync(Guid communityId, Guid userId);
+    Task<EcoPointTransaction> AwardInitiativePointsAsync(Initiative initiative);
     
-    Task GetPointBalanceCommunityAsync(Guid communityId);
+    Task<UserEcoPointBalanceDTO> GetUserPointBalanceAsync(Guid userId);
     
+    Task<CommunityEcoPointBalanceDTO> GetCommunityPointBalanceAsync(Guid communityId);
     
 }

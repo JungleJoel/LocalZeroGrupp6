@@ -11,32 +11,33 @@ public class EcoPointController(IEcoPointService ecoPointService) : ControllerBa
 {
     
     [HttpGet("{communityId}/leaderboard")]
-    public Task GetCommunityLeaderboard(int communityId)
+    public Task GetCommunityLeaderboard(Guid communityId)
     {
         throw new NotImplementedException();
     }
     
     [HttpGet("community/{communityId}/members/{userId}/balance")]
-    public Task GetMemberBalance(int communityId, int userId)
+    public Task GetMemberBalance(Guid communityId, Guid userId)
     {
         throw new NotImplementedException();
     }
     
     [HttpGet("community/{communityId}/members/{userId}/history")]
-    public Task GetMemberHistory(int communityId, int userId)
+    public Task GetMemberHistory(Guid communityId, Guid userId)
     {
         throw new NotImplementedException();
     }
     
     [Authorize(Roles = "CommunityManager")]
     [HttpPost("community/{communityId}/members/{userId}/award")]
-    public Task AwardPointsMember(int communityId, int userId)
+    public Task AwardPointsMember(Guid communityId, Guid userId)
     {
         throw new NotImplementedException();
     }
     
+    [Authorize(Roles = "CommunityManager")]
     [HttpPost("community/{communityId}/members/{userId}/deduct")]
-    public Task DeductPointsMember(int communityId, int userId)
+    public Task DeductPointsMember(Guid communityId, Guid userId)
     {
         throw new NotImplementedException();
     }

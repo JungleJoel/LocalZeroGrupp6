@@ -7,7 +7,7 @@ public record EcoPointTransactionDTO
     Guid UserId,
     Guid? InitiativeId,
     int Amount,
-    DateTime Date 
+    DateTime CreatedAt 
 );
     
     
