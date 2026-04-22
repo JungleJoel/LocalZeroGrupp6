@@ -3,6 +3,7 @@ using backend.Interfaces;
 using backend.Models;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
+using backend.Models.DTOs.Responses;
 using backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,11 +30,11 @@ public class CommunityController : ControllerBase
         return Ok(communities);
     }
     
-    [HttpGet("getUserCommunity")]
-    public async Task<ActionResult<List<CommunityMembershipDTO>>> GetMyCommunity()
+    [HttpGet("my-community")]
+    public async Task<ActionResult<GetMyCommunityResponseDTO>> GetMyCommunity()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var community = await _communityService.GetUserCommunityAsync(userId);
+        var community = await _communityService.GetMyCommunityAsync(userId);
         return Ok(community);
             
     }
