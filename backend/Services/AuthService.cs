@@ -68,8 +68,15 @@ namespace backend.Services
 
         public async Task<bool> IsManagerAtLoginAsync(Guid userId)
         {
-            var userCommunity = await _communityService.GetMyCommunityAsync(userId);
-            return userCommunity.IsCommunityManager;
+            try
+            {
+                var userCommunity = await _communityService.GetMyCommunityAsync(userId);
+                return userCommunity.IsCommunityManager;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }
