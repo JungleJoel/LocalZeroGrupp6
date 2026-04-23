@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services;
 
-public class CommunityService(ApplicationDbContext database) : ICommunityService
+public class CommunityService : ICommunityService
 {   
     private readonly ApplicationDbContext _database;
     private readonly IUserService _userService;
@@ -50,13 +50,13 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
     public async Task<CommunityJoinRequestDTO> SubmitJoinRequestAsync(Guid userId, Guid communityId)
     {
         
-        var isAlreadyResident = await database.CommunityResidents
+        var isAlreadyResident = await _database.CommunityResidents
             .AnyAsync(resident => resident.UserId == userId);
 
         if (isAlreadyResident)
             throw new ConflictException("User is already a member in community");
 
-        var existingRequest = await database.CommunityJoinRequests
+        var existingRequest = await _database.CommunityJoinRequests
             .AnyAsync(resident => resident.UserId == userId && resident.CommunityId == communityId && resident.IsAccepted == null);
         
         if(existingRequest)
@@ -71,8 +71,8 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
             CreatedAt = DateTime.UtcNow
         };
         
-        await database.CommunityJoinRequests.AddAsync(joinRequest);
-        await database.SaveChangesAsync();
+        await _database.CommunityJoinRequests.AddAsync(joinRequest);
+        await _database.SaveChangesAsync();
         
         return joinRequest.Adapt<CommunityJoinRequestDTO>();
     }
@@ -86,7 +86,7 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
             throw new ConflictException("Not a manager over this community");
         }
         
-        var requests = await  database.CommunityJoinRequests
+        var requests = await  _database.CommunityJoinRequests
             .Where(resident => resident.CommunityId == communityId)
             .ToListAsync();
         
@@ -103,7 +103,7 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
             throw new ConflictException("Not a manager over this community");
         }
         
-        var request = await database.CommunityJoinRequests
+        var request = await _database.CommunityJoinRequests
             .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
         
         if(request == null)
@@ -112,20 +112,20 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
         if(request.IsAccepted != null)
             throw new ConflictException("Request has already been reviewed");
         
-        var alreadyMember = await database.CommunityResidents
+        var alreadyMember = await _database.CommunityResidents
                     .AnyAsync(resident => resident.UserId == request.UserId && resident.CommunityId == request.CommunityId);
                 
         if(alreadyMember)
             throw new ConflictException("User is already a member in community");
         
-        await using var transaction = await database.Database.BeginTransactionAsync();
+        await using var transaction = await _database.Database.BeginTransactionAsync();
         
         request.IsAccepted = true;
         request.ReviewedBy = managerUserId;
         
-        database.CommunityJoinRequests.Update(request);
+        _database.CommunityJoinRequests.Update(request);
 
-        database.CommunityResidents.Add(new CommunityResident
+        _database.CommunityResidents.Add(new CommunityResident
         {
             CommunityId = request.CommunityId,
             UserId = request.UserId,
@@ -133,7 +133,7 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
             CreatedAt = DateTime.UtcNow
         });
         
-        await database.SaveChangesAsync();
+        await _database.SaveChangesAsync();
         await transaction.CommitAsync();
         
         return request.Adapt<CommunityJoinRequestDTO>();
@@ -149,7 +149,7 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
             throw new ConflictException("Not a manager over this community");
         }
         
-        var request = await database.CommunityJoinRequests
+        var request = await _database.CommunityJoinRequests
             .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
 
         if(request == null)
@@ -161,17 +161,17 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
         request.IsAccepted = false;
         request.ReviewedBy = managerUserId;
         
-        database.CommunityJoinRequests.Update(request);
-        await database.SaveChangesAsync();
+        _database.CommunityJoinRequests.Update(request);
+        await _database.SaveChangesAsync();
         
         return request.Adapt<CommunityJoinRequestDTO>();
     }
     
     public async Task LeaveCommunityAsync(Guid userId, Guid communityId)
     {
-        await using var transaction = await database.Database.BeginTransactionAsync();
+        await using var transaction = await _database.Database.BeginTransactionAsync();
 
-        var communityResident = await database.CommunityResidents
+        var communityResident = await _database.CommunityResidents
             .FirstOrDefaultAsync(resident => resident.UserId == userId && resident.CommunityId == communityId);
 
         if (communityResident == null)
@@ -185,9 +185,9 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
                 throw new ConflictException("There must be at least one manager in a community");
         }
 
-        database.CommunityResidents.Remove(communityResident);
+        _database.CommunityResidents.Remove(communityResident);
 
-        await database.SaveChangesAsync();
+        await _database.SaveChangesAsync();
         await transaction.CommitAsync();
     }
 
@@ -211,13 +211,13 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
 
     public async Task<bool> IsManagerAsync(Guid userId, Guid communityId)
     {
-        return await database.CommunityResidents
+        return await _database.CommunityResidents
             .AnyAsync(resident => resident.UserId == userId && resident.CommunityId == communityId && resident.IsManager == true);
     }
 
     private async Task<int> CountManagersInCommunityAsync(Guid communityId)
     {
-        return await database.CommunityResidents.CountAsync(resident =>
+        return await _database.CommunityResidents.CountAsync(resident =>
             resident.CommunityId == communityId && resident.IsManager);
     }
     

@@ -12,12 +12,20 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class CommunityController(ICommunityService communityService) : ControllerBase
+public class CommunityController : ControllerBase
 {
+    
+    private readonly ICommunityService _communityService;
+    
+    public CommunityController(ICommunityService communityService)
+    {
+        _communityService = communityService;
+    }
+    
     [HttpGet("getCommunities")]
     public async Task<ActionResult<List<CommunityDTO>>> GetCommunities()
     {
-        var communities = await communityService.GetCommunitiesAsync();
+        var communities = await _communityService.GetCommunitiesAsync();
         return Ok(communities);
     }
     
@@ -34,7 +42,7 @@ public class CommunityController(ICommunityService communityService) : Controlle
     public async Task<ActionResult<CommunityJoinRequestDTO>> JoinCommunities(Guid communityId)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return await communityService.SubmitJoinRequestAsync(userId, communityId);
+        return await _communityService.SubmitJoinRequestAsync(userId, communityId);
     }
 
     [Authorize(Roles = "CommunityManager")]
@@ -42,7 +50,7 @@ public class CommunityController(ICommunityService communityService) : Controlle
     public async Task<ActionResult<List<CommunityJoinRequestDTO>>> GetRequests(Guid  communityId)
     {
         var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return await communityService.GetRequestsAsync(managerUserId, communityId);
+        return await _communityService.GetRequestsAsync(managerUserId, communityId);
     }
     
     [Authorize(Roles = "CommunityManager")]
@@ -50,7 +58,7 @@ public class CommunityController(ICommunityService communityService) : Controlle
     public async Task<ActionResult<CommunityJoinRequestDTO>> ApproveRequest(Guid requestId, Guid communityId)
     {
         var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return await communityService.ApproveRequestAsync(requestId, managerUserId, communityId);
+        return await _communityService.ApproveRequestAsync(requestId, managerUserId, communityId);
     }
 
     [Authorize(Roles = "CommunityManager")]
@@ -58,14 +66,14 @@ public class CommunityController(ICommunityService communityService) : Controlle
     public async Task<ActionResult<CommunityJoinRequestDTO>> DeclineRequest(Guid requestId, Guid communityId)
     {
         var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return  await communityService.DeclineRequestAsync(requestId, managerUserId, communityId);
+        return  await _communityService.DeclineRequestAsync(requestId, managerUserId, communityId);
     }
 
     [HttpPost("{communityId}/leave")]
     public async Task<ActionResult> LeaveCommunities(Guid communityId)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await communityService.LeaveCommunityAsync(userId, communityId);
+        await _communityService.LeaveCommunityAsync(userId, communityId);
         return Ok();
     }
 

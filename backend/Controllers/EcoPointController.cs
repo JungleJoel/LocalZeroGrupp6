@@ -11,32 +11,40 @@ namespace backend.Controllers;
 [ApiController]
 [Authorize]
 [Route("[controller]")]
-public class EcoPointController(IEcoPointService ecoPointService) : ControllerBase
+public class EcoPointController : ControllerBase
 {
+    
+    private readonly IEcoPointService _ecoPointService;
+
+    public EcoPointController(IEcoPointService ecoPointService)
+    {
+        _ecoPointService = ecoPointService;
+    }
+    
     [Authorize(Roles = "CommunityManager")]
     [HttpPost("community/{communityId}/user/{userId}/award")]
     public async Task<EcoPointTransactionDTO> AwardEcoPointsUser(Guid communityId, Guid userId, [FromBody] int amount)
     {
-        return await ecoPointService.AwardEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, amount));
+        return await _ecoPointService.AwardEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, amount));
     }
     
     [Authorize(Roles = "CommunityManager")]
     [HttpPost("community/{communityId}/user/{userId}/deduct")]
     public async Task<EcoPointTransactionDTO> DeductEcoPointsUser(Guid communityId, Guid userId, [FromBody] int amount)
     {
-        return await ecoPointService.DeductEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, amount));
+        return await _ecoPointService.DeductEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, amount));
     }
     
     [HttpGet("community/{communityId}/user/{userId}/balance")]
     public async Task<EcoPointBalanceDTO> GetUserEcoPointBalance(Guid communityId, Guid userId)
     {
-        return await ecoPointService.GetUserEcoPointBalanceAsync(communityId, userId);
+        return await _ecoPointService.GetUserEcoPointBalanceAsync(communityId, userId);
     }
     
     [HttpGet("community/{communityId}/user/{userId}/history")]
     public async Task<List<EcoPointTransactionDTO>> GetUserEcoPointHistory(Guid communityId, Guid userId)
     {
-        return await ecoPointService.GetUserEcoPointHistoryAsync(communityId, userId);
+        return await _ecoPointService.GetUserEcoPointHistoryAsync(communityId, userId);
     }
 
     [HttpGet("community/{communityId}/balance")]
@@ -44,7 +52,7 @@ public class EcoPointController(IEcoPointService ecoPointService) : ControllerBa
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        return await ecoPointService.GetCommunityEcoPointBalanceAsync(communityId, userId);
+        return await _ecoPointService.GetCommunityEcoPointBalanceAsync(communityId, userId);
     }
 
     [HttpGet("community/{communityId}/history")]
@@ -52,7 +60,7 @@ public class EcoPointController(IEcoPointService ecoPointService) : ControllerBa
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        return await ecoPointService.GetCommunityEcoPointHistoryAsync(communityId, userId);
+        return await _ecoPointService.GetCommunityEcoPointHistoryAsync(communityId, userId);
     }
     
     [HttpGet("{communityId}/leaderboard")]

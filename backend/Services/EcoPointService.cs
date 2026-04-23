@@ -10,8 +10,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services;
 
-public class EcoPointService(ApplicationDbContext database) : IEcoPointService
+public class EcoPointService : IEcoPointService
 {
+    
+    private readonly ApplicationDbContext _database;
+
+    public EcoPointService(ApplicationDbContext database)
+    {
+        _database = database;
+    }
+    
     public async Task<EcoPointTransactionDTO> AwardEcoPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO)
     {
         await EnsureResidentAsync(ecoPointRequestDTO.CommunityId, ecoPointRequestDTO.UserId);
@@ -29,8 +37,8 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
             CreatedAt = DateTime.UtcNow
         };
         
-        await database.EcoPointTransactions.AddAsync(ecoPointTransaction);
-        await database.SaveChangesAsync();
+        await _database.EcoPointTransactions.AddAsync(ecoPointTransaction);
+        await _database.SaveChangesAsync();
         
         return ecoPointTransaction.Adapt<EcoPointTransactionDTO>();
     }
@@ -53,8 +61,8 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
             CreatedAt = DateTime.UtcNow
         };
         
-        await database.EcoPointTransactions.AddAsync(ecoPointTransaction);
-        await database.SaveChangesAsync();
+        await _database.EcoPointTransactions.AddAsync(ecoPointTransaction);
+        await _database.SaveChangesAsync();
         
         return ecoPointTransaction.Adapt<EcoPointTransactionDTO>();
     }
@@ -63,7 +71,7 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
     {
         await EnsureResidentAsync(communityId, userId);
         
-        var userEcoPointBalance = await database.EcoPointTransactions
+        var userEcoPointBalance = await _database.EcoPointTransactions
             .Where(x => x.UserId == userId)
             .SumAsync(x => x.Amount);
 
@@ -76,7 +84,7 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
     {
         await EnsureResidentAsync(communityId, userId);
         
-        var ecoPointHistory = await database.EcoPointTransactions
+        var ecoPointHistory = await _database.EcoPointTransactions
             .Where(x => x.UserId == userId)
             .ToListAsync();
         
@@ -87,7 +95,7 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
     {
         await EnsureResidentAsync(communityId, userId);
         
-        var communityEcoPointBalance = await database.EcoPointTransactions.Where(x => x.CommunityId == communityId).SumAsync(x => x.Amount);
+        var communityEcoPointBalance = await _database.EcoPointTransactions.Where(x => x.CommunityId == communityId).SumAsync(x => x.Amount);
 
         var communityEcoPointBalanceDTO = new EcoPointBalanceDTO(communityId, communityEcoPointBalance);
 
@@ -98,7 +106,7 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
     {
         await EnsureResidentAsync(communityId, userId);
 
-        var ecoPointHistory = await database.EcoPointTransactions
+        var ecoPointHistory = await _database.EcoPointTransactions
             .Where(x => x.CommunityId == communityId)
             .ToListAsync();
         
@@ -119,7 +127,7 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
     
     private async Task EnsureResidentAsync(Guid communityId, Guid userId)
     {
-        var isResident = await database.CommunityResidents.AnyAsync(x => x.UserId == userId && x.CommunityId == communityId);
+        var isResident = await _database.CommunityResidents.AnyAsync(x => x.UserId == userId && x.CommunityId == communityId);
         
         if(!isResident)
             throw new NotFoundException("Incorrect user or community");
