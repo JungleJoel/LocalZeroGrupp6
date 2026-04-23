@@ -1,6 +1,7 @@
 using backend.Models;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
+using backend.Models.DTOs.Responses;
 
 namespace backend.Interfaces;
 
@@ -22,5 +23,5 @@ public interface ICommunityService
 
     Task<bool> IsManagerAsync(Guid userId, Guid communityId);
 
-    Task<List<CommunityMembershipDTO>> GetUserCommunityAsync(Guid userId);
+    Task<GetMyCommunityResponseDTO> GetMyCommunityAsync(Guid userId);
 }

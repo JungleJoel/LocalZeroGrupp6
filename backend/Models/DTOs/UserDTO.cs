@@ -7,7 +7,8 @@ public record UserDTO
         string LastName,
         string Email,
         string? AvatarImageUrl,
-        CommunityDTO? Community,
         int EcoPoints,
+        bool? IsCommunityManager,
+        CommunityDTO? Community,
         DateTime CreatedAt
     );
