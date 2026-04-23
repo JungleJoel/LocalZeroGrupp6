@@ -11,8 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace backend.Services;
 
 public class CommunityService : ICommunityService
-{
-    
+{   
     private readonly ApplicationDbContext _database;
     private readonly IUserService _userService;
 
