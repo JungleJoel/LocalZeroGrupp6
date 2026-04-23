@@ -3,6 +3,7 @@ using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
+using backend.Models.DTOs.Responses;
 using backend.Models.Entities;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -10,16 +11,33 @@ using Microsoft.EntityFrameworkCore;
 namespace backend.Services;
 
 public class CommunityService(ApplicationDbContext database) : ICommunityService
-{
+{   
+    private readonly ApplicationDbContext _database;
+    private readonly IUserService _userService;
+
+    public CommunityService(ApplicationDbContext database, IUserService userService)
+    {
+        _database = database;
+        _userService = userService;
+    }
+    
     public async Task<List<CommunityDTO>> GetCommunitiesAsync()
     {
-        List<Community> communities = await database.Communities.ToListAsync();
+        List<Community> communities = await _database.Communities
+            .Include(c => c.EcoPointTransactions)
+            .Include(c => c.CommunityResidents)
+            .AsSplitQuery()
+            .ToListAsync();
         return communities.Adapt<List<CommunityDTO>>();
     }
 
     public async Task<CommunityDTO> GetCommunityAsync(Guid id)
     {
-        var community = await database.FindAsync<Community>(id);
+        var community = await _database.Communities
+            .Include(c => c.EcoPointTransactions)
+            .Include(c => c.CommunityResidents)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(c => c.Id == id);
 
         if (community == null)
         {
@@ -172,21 +190,25 @@ public class CommunityService(ApplicationDbContext database) : ICommunityService
         await database.SaveChangesAsync();
         await transaction.CommitAsync();
     }
-    
-    
-    public async Task<List<CommunityMembershipDTO>> GetUserCommunityAsync(Guid userId)
+
+
+    public async Task<GetMyCommunityResponseDTO> GetMyCommunityAsync(Guid userId)
     {
-        return await database.CommunityResidents
-            .Where(resident => resident.UserId == userId)
-            .Select(r => new CommunityMembershipDTO
-            {
-                CommunityId = r.CommunityId,
-                CommunityName = r.Community.Name,
-                IsManager = r.IsManager
-            })
-            .ToListAsync();
+        var user = await _userService.GetAsync(userId);
+
+        if (user.Community == null)
+        {
+            throw new NotFoundException("User is not a member of any community.");
+        }
+
+        var community = await GetCommunityAsync(user.Community.Id);
+
+        return new GetMyCommunityResponseDTO(
+            community,
+            user.IsCommunityManager ?? false
+        );
     }
-    
+
     public async Task<bool> IsManagerAsync(Guid userId, Guid communityId)
     {
         return await database.CommunityResidents
