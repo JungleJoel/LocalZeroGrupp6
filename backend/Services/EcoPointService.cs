@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models;
 using backend.Models.DTOs;
@@ -121,6 +122,6 @@ public class EcoPointService(ApplicationDbContext database) : IEcoPointService
         var isResident = await database.CommunityResidents.AnyAsync(x => x.UserId == userId && x.CommunityId == communityId);
         
         if(!isResident)
-            throw new ArgumentException("Incorrect user or community");
+            throw new NotFoundException("Incorrect user or community");
     }
 }
