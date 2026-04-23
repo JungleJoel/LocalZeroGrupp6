@@ -6,9 +6,11 @@ import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { EcoPointsCard } from "./EcoPointsCard";
+import { NotAMember } from "./NotAMember";
 
 export default function Community() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasNotJoinedYet, setHasNotJoinedYet] = useState<boolean>(false);
   const [apiResponse, setApiResponse] =
     useState<GetMyCommunityResponseDTO | null>(null);
 
@@ -27,8 +29,12 @@ export default function Community() {
       if (response.ok) {
         setApiResponse(await response.json());
       } else {
-        const json = await response.json();
-        throw new Error(json.detail || "Could not get community");
+        if (response.status == 404) {
+          setHasNotJoinedYet(true);
+        } else {
+          const json = await response.json();
+          throw new Error(json.detail || "Could not get community");
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
@@ -46,6 +52,14 @@ export default function Community() {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (hasNotJoinedYet) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center">
+        <NotAMember />
       </div>
     );
   }
