@@ -7,14 +7,19 @@ namespace backend.Interfaces;
 
 public interface IEcoPointService
 {
-    Task<EcoPointTransactionDTO> AwardPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO);
+    Task<EcoPointTransactionDTO> AwardEcoPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO);
     
-    Task<EcoPointTransactionDTO> DeductPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO);
+    Task<EcoPointTransactionDTO> DeductEcoPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO);
     
-    Task<EcoPointTransaction> AwardInitiativePointsAsync(Initiative initiative);
+    Task<EcoPointBalanceDTO> GetUserEcoPointBalanceAsync(Guid communityId, Guid userId);
     
-    Task<UserEcoPointBalanceDTO> GetUserPointBalanceAsync(Guid userId);
+    Task<List<EcoPointTransactionDTO>> GetUserEcoPointHistoryAsync(Guid communityId, Guid userId);
     
-    Task<CommunityEcoPointBalanceDTO> GetCommunityPointBalanceAsync(Guid communityId);
+    Task<EcoPointBalanceDTO> GetCommunityEcoPointBalanceAsync(Guid communityId, Guid userId);
+
+    Task<List<EcoPointTransactionDTO>> GetCommunityEcoPointHistoryAsync(Guid communityId, Guid userId);
     
+    Task GetCommunityLeaderboardAsync(Guid communityId, Guid userId);
+    
+    Task<EcoPointTransaction> AwardInitiativeEcoPointsAsync(Initiative initiative);
 }

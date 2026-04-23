@@ -4,6 +4,6 @@ public record EcoPointRequestDTO
 (   
     Guid CommunityId,
     Guid UserId,
-    Guid InitiativeId,
+    Guid? InitiativeId,
     int Amount
 );

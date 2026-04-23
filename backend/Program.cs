@@ -60,6 +60,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEcoPointService, EcoPointService>();
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 

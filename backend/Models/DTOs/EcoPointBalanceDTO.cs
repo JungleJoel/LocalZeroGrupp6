@@ -1,7 +1,7 @@
 namespace backend.Models.DTOs;
 
-public record UserEcoPointBalanceDTO
+public record EcoPointBalanceDTO
 (
-    Guid UserId,
+    Guid Id,
     int EcoPointBalance
 );
