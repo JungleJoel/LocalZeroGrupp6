@@ -61,6 +61,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
+builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IEcoPointService>());
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 

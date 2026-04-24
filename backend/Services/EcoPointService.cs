@@ -119,10 +119,24 @@ public class EcoPointService : IEcoPointService
         throw new NotImplementedException();
     }
     
-    public Task<EcoPointTransaction> AwardInitiativeEcoPointsAsync(Initiative initiative)
+    public async Task<List<EcoPointTransactionDTO>> AwardInitiativeEcoPointsAsync(InitiativeEcoPointRequestDTO initiativeEcoPointRequestDTO)
     {
-        //WAITING FOR INITIATIVESERVICE TO BE IMPLEMENTED WALLA ONLY TO BE USED INSIDE BACKEND!!!
-        throw new NotImplementedException();
+        var ecoPointTransactions = new List<EcoPointTransactionDTO>();
+
+        foreach (var user in initiativeEcoPointRequestDTO.Users)
+        {
+            var ecoPointRequest = new EcoPointRequestDTO(
+                user.Community!.Id,
+                user.Id,
+                initiativeEcoPointRequestDTO.InitiativeId,
+                initiativeEcoPointRequestDTO.EcoPointAmount
+            );
+            
+            var ecoPointTransaction = await AwardEcoPointsUserAsync(ecoPointRequest);
+            ecoPointTransactions.Add(ecoPointTransaction);
+        }
+        
+        return ecoPointTransactions;
     }
     
     private async Task EnsureResidentAsync(Guid communityId, Guid userId)
