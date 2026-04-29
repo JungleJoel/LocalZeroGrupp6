@@ -92,4 +92,23 @@ public class InitiativeService
 
         await _database.SaveChangesAsync();
     }
+
+    public async Task EndInitiativeAsync(Guid id, Guid userId)
+{
+    var initiative = await _database.Initiatives
+        .FirstOrDefaultAsync(i => i.Id == id);
+
+    if (initiative == null)
+        throw new NotFoundException("Initiative not found");
+
+    if (initiative.CreatedBy != userId)
+        throw new ConflictException("Not allowed");
+
+    if (initiative.EndedAt != null)
+        throw new ConflictException("Already ended");
+
+    initiative.EndedAt = DateTimeOffset.UtcNow;
+
+    await _database.SaveChangesAsync();
+}
 }
