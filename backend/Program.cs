@@ -58,9 +58,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
-<<<<<<< HEAD
 builder.Services.AddScoped<IAccountService, AccountService>();
-=======
 builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
@@ -68,7 +66,6 @@ builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IE
 builder.Services.AddScoped<InitiativeService>();
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
->>>>>>> main
 
 var app = builder.Build();
 

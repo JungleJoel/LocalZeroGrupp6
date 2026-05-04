@@ -9,20 +9,14 @@ export default function Page() {
         <Button>/auth/login</Button>
       </Link>
       <Link href="/auth/register">
-        <Button>/auth/register </Button>
+        <Button>/auth/register</Button>
       </Link>
       <Link href="/home">
         <Button>/home (protected)</Button>
       </Link>
-<<<<<<< HEAD
-      <Link href="/auth/register">
-        <Button>/auth/register (protected)</Button>
-      </Link>
       <Link href="/account/settings">
         <Button>/account/settings (protected)</Button>
       </Link>
-=======
->>>>>>> main
     </div>
   );
 }
