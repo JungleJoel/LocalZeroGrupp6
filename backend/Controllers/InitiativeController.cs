@@ -1,0 +1,71 @@
+using System.Security.Claims;
+using backend.Models.DTOs;
+using backend.Models.DTOs.Requests;
+using backend.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace backend.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("[controller]")]
+public class InitiativeController : ControllerBase
+{
+    private readonly InitiativeService _initiativeService;
+
+    public InitiativeController(InitiativeService initiativeService)
+    {
+        _initiativeService = initiativeService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<InitiativeDTO>>> GetAll()
+    {
+        var initiatives = await _initiativeService.GetInitiativesAsync();
+        return Ok(initiatives);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<InitiativeDTO>> GetById(Guid id)
+    {
+        var initiative = await _initiativeService.GetInitiative(id);
+        return Ok(initiative);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<InitiativeDTO>> Create(CreateInitiativeRequestDTO request)
+    {
+        var userId = GetUserId();
+        var result = await _initiativeService.CreateInitiativeAsync(userId, request);
+        
+        
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Cancel(Guid id)
+    {
+        var userId = GetUserId();
+        await _initiativeService.CancelInitiativeAsync(id, userId);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/end")]
+    public async Task<ActionResult> End(Guid id)
+    {
+        var userId = GetUserId();
+        await _initiativeService.EndInitiativeAsync(id, userId);
+        return Ok();
+    }
+
+    private Guid GetUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim))
+        {
+            throw new UnauthorizedAccessException("User ID not found in token");
+        }
+        return Guid.Parse(userIdClaim);
+    }
+}

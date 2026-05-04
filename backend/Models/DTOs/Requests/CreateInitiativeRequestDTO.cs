@@ -10,5 +10,6 @@ public record CreateInitiativeRequestDTO(
     double Latitude,
     double Longitude,
     DateTime StartsAt,
-    DateTime? EstimatedEndsAt
+    DateTime? EstimatedEndsAt,
+    int EcoPointsPerParticipant
 );

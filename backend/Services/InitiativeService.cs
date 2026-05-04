@@ -34,7 +34,7 @@ public class InitiativeService
             StartsAt = request.StartsAt,
             EstimatedEndsAt = request.EstimatedEndsAt,
             EndedAt = null,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTime.UtcNow,
             EcoPointsPerParticipant = request.EcoPointsPerParticipant
         };
 
@@ -59,22 +59,6 @@ public class InitiativeService
             throw new NotFoundException($"Initiative with id {id} not found");
         }
         return initiative.Adapt<InitiativeDTO>();
-    }
-
-    public async Task EndInitiativeAsync(Guid id)
-    {
-        var initiative = await _database.Initiatives
-            .FirstOrDefaultAsync(i => i.Id == id);
-
-        if (initiative == null)
-            throw new NotFoundException("Initiative not found");
-
-        if (initiative.EndedAt != null)
-            throw new ConflictException("Already ended");
-
-        initiative.EndedAt = DateTimeOffset.UtcNow;
-
-        await _database.SaveChangesAsync();
     }
 
     public async Task CancelInitiativeAsync(Guid id, Guid userId)
@@ -107,7 +91,7 @@ public class InitiativeService
     if (initiative.EndedAt != null)
         throw new ConflictException("Already ended");
 
-    initiative.EndedAt = DateTimeOffset.UtcNow;
+    initiative.EndedAt = DateTime.UtcNow;
 
     await _database.SaveChangesAsync();
 }
