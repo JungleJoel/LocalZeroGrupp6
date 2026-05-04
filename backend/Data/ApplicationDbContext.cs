@@ -101,13 +101,15 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<CommunityResident>(entity =>
         {
-            entity.HasKey(e => new { e.UserId, e.CommunityId }).HasName("community_resident_pkey");
+            entity.HasKey(e => e.UserId).HasName("community_resident_pkey");
 
             entity.ToTable("community_resident");
 
             entity.HasIndex(e => e.CommunityId, "community_resident_community_id_idx");
 
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId)
+                .ValueGeneratedNever()
+                .HasColumnName("user_id");
             entity.Property(e => e.CommunityId).HasColumnName("community_id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("now()")
@@ -119,8 +121,8 @@ public partial class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("community_resident_community_id_fkey");
 
-            entity.HasOne(d => d.User).WithMany(p => p.CommunityResidents)
-                .HasForeignKey(d => d.UserId)
+            entity.HasOne(d => d.User).WithOne(p => p.CommunityResident)
+                .HasForeignKey<CommunityResident>(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("community_resident_user_id_fkey");
         });
@@ -177,6 +179,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("now()")
                 .HasColumnName("created_at");
             entity.Property(e => e.InitiativeId).HasColumnName("initiative_id");
+            entity.Property(e => e.Reason).HasColumnName("reason");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Community).WithMany(p => p.EcoPointTransactions)
