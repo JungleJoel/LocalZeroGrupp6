@@ -1,13 +1,14 @@
 import { cookies } from "next/headers";
 import { API_BASE_URL } from "@/lib/config";
+import { UserDTO } from "@/types/userDTO";
 
-export default async function checkAuth(): Promise<boolean> {
+export default async function checkAuth(): Promise<UserDTO | null> {
   const cookieStore = await cookies();
 
   const sessionCookie = cookieStore.get("LocalZeroCookie");
 
   if (!sessionCookie) {
-    return false;
+    return null;
   }
 
   try {
@@ -20,12 +21,12 @@ export default async function checkAuth(): Promise<boolean> {
     });
 
     if (response.ok) {
-      return true;
+      return await response.json();
     } else {
-      return false;
+      return null;
     }
   } catch (error) {
     console.log(error);
-    return false;
+    return null;
   }
 }

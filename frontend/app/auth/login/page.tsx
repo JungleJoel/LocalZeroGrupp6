@@ -8,6 +8,7 @@ import { Users } from "lucide-react";
 import { API_BASE_URL } from "@/lib/config";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { LoginRequestDTO } from "@/types/loginRequestDTO";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,10 +21,13 @@ export default function Login() {
 
     try {
       setIsLoading(true);
+
+      const payload: LoginRequestDTO = { email: email, password: password }
+
       const response = await fetch(`${API_BASE_URL}/Auth/login`, {
         method: "POST",
         credentials: "include",
-        body: JSON.stringify({ email: email, password: password }),
+        body: JSON.stringify(payload),
         headers: {
           "Content-Type": "application/json",
         },

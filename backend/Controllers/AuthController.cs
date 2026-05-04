@@ -15,17 +15,21 @@ namespace backend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IUserService userService)
         {
             _authService = authService;
+            _userService = userService;
         }
 
         [Authorize]
         [HttpGet("check-auth")]
-        public async Task<IActionResult> CheckAuth()
+        public async Task<ActionResult<UserDTO>> CheckAuth()
         {
-            return Ok();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _userService.GetAsync(userId);
+            return Ok(user);
         }
 
         [UnauthorizedOnly]
@@ -33,11 +37,18 @@ namespace backend.Controllers
         public async Task<ActionResult<UserDTO>> Login([FromBody] LoginRequestDTO request)
         {
             var user = await _authService.AuthenticateAsync(request);
-
+            var isManager = await _authService.IsManagerAtLoginAsync(user.Id);
+            
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            
+            };
+            
+            if (isManager)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "CommunityManager"));
+            }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -46,7 +57,7 @@ namespace backend.Controllers
 
             return Ok(user);
         }
-
+        
         [UnauthorizedOnly]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)

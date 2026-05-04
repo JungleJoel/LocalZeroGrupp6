@@ -460,6 +460,7 @@ FodyWeavers.xsd
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
+*/.idea
 
 # Gradle and Maven with auto-import
 # When using Gradle or Maven with auto-import, you should exclude module files,
@@ -760,3 +761,10 @@ sketch
 
 
 backend/appsettings.Development.json
+backend/Models/Entities/*
+
+
+.next/
+
+backend/.env.example
+package-lock.json
