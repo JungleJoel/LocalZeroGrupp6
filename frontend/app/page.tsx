@@ -12,7 +12,7 @@ export default function Page() {
         <Button>/home (protected)</Button>
       </Link>
       <Link href="/auth/register">
-        <Button>/auth/register (protected)</Button>
+        <Button>/auth/register </Button>
       </Link>
       <Link href="/account/settings">
         <Button>/account/settings (protected)</Button>

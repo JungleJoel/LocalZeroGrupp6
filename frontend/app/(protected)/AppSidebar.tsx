@@ -29,7 +29,7 @@ const navItems = [
   { label: "Create Initiative", href: "/createInitiatives", icon: MessageSquare },
   { label: "Initiatives", href: "/initiatives", icon: Leaf },
   { label: "Messages", href: "/messages", icon: MessageSquare },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Settings", href: "/account/settings", icon: Settings },
 ];
 
 export function AppSidebar({user}:{user: UserDTO}) {
