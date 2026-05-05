@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services;
 
-public class CommunityService : ICommunityService
+public class CommunityService : ICommunityService, ICommunityValidationService
 {   
     private readonly ApplicationDbContext _database;
     private readonly IUserService _userService;
@@ -49,9 +49,8 @@ public class CommunityService : ICommunityService
 
     public async Task<CommunityJoinRequestDTO> SubmitJoinRequestAsync(Guid userId, Guid communityId)
     {
-        
-        var isAlreadyResident = await _database.CommunityResidents
-            .AnyAsync(resident => resident.UserId == userId);
+
+        var isAlreadyResident = await IsResidentInCommunityAsync(communityId, userId);
 
         if (isAlreadyResident)
             throw new ConflictException("User is already a member in community");
@@ -112,8 +111,7 @@ public class CommunityService : ICommunityService
         if(request.IsAccepted != null)
             throw new ConflictException("Request has already been reviewed");
         
-        var alreadyMember = await _database.CommunityResidents
-                    .AnyAsync(resident => resident.UserId == request.UserId && resident.CommunityId == request.CommunityId);
+        var alreadyMember = await IsResidentInCommunityAsync(request.CommunityId, request.UserId);
                 
         if(alreadyMember)
             throw new ConflictException("User is already a member in community");
@@ -207,6 +205,11 @@ public class CommunityService : ICommunityService
             community,
             user.IsCommunityManager ?? false
         );
+    }
+    
+    public async Task<bool> IsResidentInCommunityAsync(Guid communityId, Guid userId)
+    {
+        return await _database.CommunityResidents.AnyAsync(x => x.UserId == userId && x.CommunityId == communityId);
     }
 
     public async Task<bool> IsManagerAsync(Guid userId, Guid communityId)
