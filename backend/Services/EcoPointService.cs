@@ -34,7 +34,8 @@ public class EcoPointService : IEcoPointService
             UserId = ecoPointRequestDTO.UserId,
             InitiativeId = ecoPointRequestDTO.InitiativeId,
             Amount = ecoPointRequestDTO.Amount, 
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Reason = ecoPointRequestDTO.Reason
         };
         
         await _database.EcoPointTransactions.AddAsync(ecoPointTransaction);
@@ -58,7 +59,8 @@ public class EcoPointService : IEcoPointService
             UserId = ecoPointRequestDTO.UserId,
             InitiativeId = ecoPointRequestDTO.InitiativeId,
             Amount = -ecoPointRequestDTO.Amount, //HÄR ÄR SKILLNADEN!
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Reason = ecoPointRequestDTO.Reason
         };
         
         await _database.EcoPointTransactions.AddAsync(ecoPointTransaction);
@@ -129,7 +131,8 @@ public class EcoPointService : IEcoPointService
                 user.Community!.Id,
                 user.Id,
                 initiativeEcoPointRequestDTO.InitiativeId,
-                initiativeEcoPointRequestDTO.EcoPointAmount
+                initiativeEcoPointRequestDTO.EcoPointAmount,
+                initiativeEcoPointRequestDTO.Reason
             );
             
             var ecoPointTransaction = await AwardEcoPointsUserAsync(ecoPointRequest);

@@ -5,5 +5,6 @@ public record EcoPointRequestDTO
     Guid CommunityId,
     Guid UserId,
     Guid? InitiativeId,
-    int Amount
+    int Amount,
+    string? Reason
 );
