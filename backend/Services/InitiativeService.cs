@@ -5,17 +5,22 @@ using backend.Models.Entities;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
-
+using backend.Interfaces;
 namespace backend.Services;
 
 public class InitiativeService
 {
     private readonly ApplicationDbContext _database;
+    private readonly ApplicationDbContext _context;
+private readonly IEcoPointService _ecoPointService;
+private readonly ILogger<InitiativeService> _logger;
 
-    public InitiativeService(ApplicationDbContext database)
-    {
-        _database = database;
-    }
+    public InitiativeService(ApplicationDbContext context, IEcoPointService ecoPointService, ILogger<InitiativeService> logger)
+{
+    _context = context;
+    _ecoPointService = ecoPointService;
+    _logger = logger;
+}
 
     public async Task<InitiativeDTO> CreateInitiativeAsync(Guid userId, CreateInitiativeRequestDTO request)
     {
@@ -46,7 +51,7 @@ public class InitiativeService
 
     public async Task<List<InitiativeDTO>> GetInitiativesAsync()
     {
-        return (await _database.Initiatives.ToListAsync())
+        return (await _context.Initiatives.ToListAsync())
         .Adapt<List<InitiativeDTO>>();
     }
 
@@ -59,6 +64,22 @@ public class InitiativeService
             throw new NotFoundException($"Initiative with id {id} not found");
         }
         return initiative.Adapt<InitiativeDTO>();
+    }
+
+    public async Task EndInitiativeAsync(Guid id)
+    {
+        var initiative = await _database.Initiatives
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (initiative == null)
+            throw new NotFoundException("Initiative not found");
+
+        if (initiative.EndedAt != null)
+            throw new ConflictException("Already ended");
+
+        initiative.EndedAt = DateTime.UtcNow;
+
+        await _database.SaveChangesAsync();
     }
 
     public async Task CancelInitiativeAsync(Guid id, Guid userId)
@@ -94,5 +115,37 @@ public class InitiativeService
     initiative.EndedAt = DateTime.UtcNow;
 
     await _database.SaveChangesAsync();
+}
+  public async Task FinalizeInitiativeAsync(Guid initiativeId) //HÄr ska poäng ges till deltagare
+{
+    var initiative = await _context.Initiatives
+        .Include(i => i.InitiativeParticipators) 
+        .FirstOrDefaultAsync(i => i.Id == initiativeId);
+
+    if (initiative == null || initiative.EndedAt != null)
+        return;
+
+    initiative.EndedAt = DateTime.UtcNow;
+
+    foreach (var participant in initiative.InitiativeParticipators)
+    {
+        try
+        {
+            var pointRequest = new EcoPointRequestDTO(
+                initiative.CommunityId, 
+                participant.UserId, 
+                null, 
+                initiative.EcoPointsPerParticipant ?? 0
+            );
+
+            await _ecoPointService.AwardEcoPointsUserAsync(pointRequest);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Not able to give members points.");
+        }
+    }
+
+    await _context.SaveChangesAsync();
 }
 }
