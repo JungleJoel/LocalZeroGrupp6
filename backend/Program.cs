@@ -60,9 +60,11 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<ICommunityValidationService>(sp => (CommunityService)sp.GetRequiredService<ICommunityService>());
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
 builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IEcoPointService>());
+builder.Services.AddScoped<ISustainabilityTrackerService, SustainabilityTrackerService>();
 builder.Services.AddScoped<InitiativeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 
