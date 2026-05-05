@@ -5,10 +5,11 @@ using backend.Models.Entities;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
+using backend.Interfaces;
 
 namespace backend.Services;
 
-public class InitiativeService
+public class InitiativeService : IInitiativeService
 {
     private readonly ApplicationDbContext _database;
 
@@ -78,21 +79,21 @@ public class InitiativeService
     }
 
     public async Task EndInitiativeAsync(Guid id, Guid userId)
-{
-    var initiative = await _database.Initiatives
-        .FirstOrDefaultAsync(i => i.Id == id);
+    {
+        var initiative = await _database.Initiatives
+            .FirstOrDefaultAsync(i => i.Id == id);
 
-    if (initiative == null)
-        throw new NotFoundException("Initiative not found");
+        if (initiative == null)
+            throw new NotFoundException("Initiative not found");
 
-    if (initiative.CreatedBy != userId)
-        throw new ConflictException("Not allowed");
+        if (initiative.CreatedBy != userId)
+            throw new ConflictException("Not allowed");
 
-    if (initiative.EndedAt != null)
-        throw new ConflictException("Already ended");
+        if (initiative.EndedAt != null)
+            throw new ConflictException("Already ended");
 
-    initiative.EndedAt = DateTime.UtcNow;
+        initiative.EndedAt = DateTime.UtcNow;
 
-    await _database.SaveChangesAsync();
-}
+        await _database.SaveChangesAsync();
+    }
 }
