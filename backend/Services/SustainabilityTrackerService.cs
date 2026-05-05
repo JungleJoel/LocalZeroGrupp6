@@ -2,6 +2,8 @@ using backend.Data;
 using backend.Interfaces;
 using backend.Models;
 using backend.Models.DTOs.Requests;
+using Mapster;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace backend.Services;
@@ -11,32 +13,25 @@ public class SustainabilityTrackerService : ISustainabilityTrackerService
 
     private readonly IEcoPointTransactions _ecoPointTransactions;
     
-    private readonly IInitiativeService _initiativeService;
-    
     private readonly ApplicationDbContext _database;
 
-    public SustainabilityTrackerService(IEcoPointTransactions ecoPointTransactions, IInitiativeService initiativeService, ApplicationDbContext database)
+    public SustainabilityTrackerService(IEcoPointTransactions ecoPointTransactions, ApplicationDbContext database)
     {
         _ecoPointTransactions = ecoPointTransactions;
-        _initiativeService = initiativeService;
         _database = database;
     }
 
-    public async Task<EcoPointTransactionDTO> AwardSustainability(Guid userId, CreateInitiativeRequestDTO createInitiativeRequestDto)
+    public async Task<EcoPointTransactionDTO> AwardSustainability(EcoPointRequestDTO ecoPointRequestDTO)
     {
-       var newInitiative = await _initiativeService.CreateInitiativeAsync(userId, createInitiativeRequestDto);
-
-       return await _ecoPointTransactions.AwardEcoPointsUserAsync(new EcoPointRequestDTO(
-           CommunityId: newInitiative.CommunityId,
-           UserId: userId,
-           InitiativeId: newInitiative.Id,
-           Amount: newInitiative.EcoPointsPerParticipant
-       ));
+        return await _ecoPointTransactions.AwardEcoPointsUserAsync(ecoPointRequestDTO);
     }
 
-    public async Task GetSustainabilityTrackerHistory(Guid userId)
+    public async Task<List<EcoPointTransactionDTO>> GetSustainabilityTrackerHistory(Guid userId)
     {
-        throw new NotImplementedException();
+        var ecoPointTransactions=  await _database.EcoPointTransactions
+            .Where(user => user.InitiativeId == null)
+            .ToListAsync();
+        return ecoPointTransactions.Adapt<List<EcoPointTransactionDTO>>();
     }
 
 }
