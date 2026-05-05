@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class SustainabilityTrackerController
@@ -17,8 +18,7 @@ public class SustainabilityTrackerController
     {
         _sustainabilityTrackerService = sustainabilityTrackerService;
     }
-
-    [Authorize]
+    
     [HttpPost("community/{communityId}/user/{userId}/sustainability")]
     public async Task<EcoPointTransactionDTO> AddSustainableEcoPoints(Guid communityId, Guid userId, [FromBody] EcoPointPayloadDTO ecoPointPayloadDto)
     {
@@ -31,7 +31,6 @@ public class SustainabilityTrackerController
              ));
     }
     
-    [Authorize]
     [HttpGet("community/{communityId}/user/{userId}/sustainability")]
     public async Task<List<EcoPointTransactionDTO>> GetHistory(Guid userId)
     {
