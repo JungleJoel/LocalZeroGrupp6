@@ -19,8 +19,8 @@ namespace backend.Services
         public async Task<UserDTO> GetAsync(Guid id)
         {
             var user = await _database.Users
-                .Include(u => u.CommunityResidents)
-                    .ThenInclude(cr => cr.Community)
+                .Include(u => u.CommunityResident)
+                    .ThenInclude(cr => cr!.Community)
                 .Include(u => u.EcoPointTransactions)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(u => u.Id == id);

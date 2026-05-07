@@ -17,6 +17,8 @@ public partial class EcoPointTransaction
 
     public DateTime CreatedAt { get; set; }
 
+    public string? Reason { get; set; }
+
     public virtual Community Community { get; set; } = null!;
 
     public virtual Initiative? Initiative { get; set; }

@@ -23,16 +23,16 @@ public class EcoPointController : ControllerBase
     
     [Authorize(Roles = "CommunityManager")]
     [HttpPost("community/{communityId}/user/{userId}/award")]
-    public async Task<EcoPointTransactionDTO> AwardEcoPointsUser(Guid communityId, Guid userId, [FromBody] int amount)
+    public async Task<EcoPointTransactionDTO> AwardEcoPointsUser(Guid communityId, Guid userId, [FromBody] EcoPointPayloadDTO ecoPointPayloadDto)
     {
-        return await _ecoPointService.AwardEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, amount));
+        return await _ecoPointService.AwardEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, ecoPointPayloadDto.Amount, ecoPointPayloadDto.Reason));
     }
     
     [Authorize(Roles = "CommunityManager")]
     [HttpPost("community/{communityId}/user/{userId}/deduct")]
-    public async Task<EcoPointTransactionDTO> DeductEcoPointsUser(Guid communityId, Guid userId, [FromBody] int amount)
+    public async Task<EcoPointTransactionDTO> DeductEcoPointsUser(Guid communityId, Guid userId, [FromBody] EcoPointPayloadDTO ecoPointPayloadDto)
     {
-        return await _ecoPointService.DeductEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, amount));
+        return await _ecoPointService.DeductEcoPointsUserAsync(new EcoPointRequestDTO(communityId, userId, null, ecoPointPayloadDto.Amount, ecoPointPayloadDto.Reason));
     }
     
     [HttpGet("community/{communityId}/user/{userId}/balance")]

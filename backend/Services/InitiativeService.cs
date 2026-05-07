@@ -6,9 +6,10 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
 using backend.Interfaces;
+
 namespace backend.Services;
 
-public class InitiativeService
+public class InitiativeService : IInitiativeService
 {
     private readonly ApplicationDbContext _database;
     private readonly ApplicationDbContext _context;
@@ -99,53 +100,53 @@ private readonly ILogger<InitiativeService> _logger;
     }
 
     public async Task EndInitiativeAsync(Guid id, Guid userId)
-{
-    var initiative = await _database.Initiatives
-        .FirstOrDefaultAsync(i => i.Id == id);
-
-    if (initiative == null)
-        throw new NotFoundException("Initiative not found");
-
-    if (initiative.CreatedBy != userId)
-        throw new ConflictException("Not allowed");
-
-    if (initiative.EndedAt != null)
-        throw new ConflictException("Already ended");
-
-    initiative.EndedAt = DateTime.UtcNow;
-
-    await _database.SaveChangesAsync();
-}
-  public async Task FinalizeInitiativeAsync(Guid initiativeId) //HÄr ska poäng ges till deltagare
-{
-    var initiative = await _context.Initiatives
-        .Include(i => i.InitiativeParticipators) 
-        .FirstOrDefaultAsync(i => i.Id == initiativeId);
-
-    if (initiative == null || initiative.EndedAt != null)
-        return;
-
-    initiative.EndedAt = DateTime.UtcNow;
-
-    foreach (var participant in initiative.InitiativeParticipators)
     {
-        try
-        {
-            var pointRequest = new EcoPointRequestDTO(
-                initiative.CommunityId, 
-                participant.UserId, 
-                null, 
-                initiative.EcoPointsPerParticipant ?? 0
-            );
+        var initiative = await _database.Initiatives
+            .FirstOrDefaultAsync(i => i.Id == id);
 
-            await _ecoPointService.AwardEcoPointsUserAsync(pointRequest);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Not able to give members points.");
-        }
-    }
+        if (initiative == null)
+            throw new NotFoundException("Initiative not found");
 
-    await _context.SaveChangesAsync();
-}
-}
+        if (initiative.CreatedBy != userId)
+            throw new ConflictException("Not allowed");
+
+        if (initiative.EndedAt != null)
+            throw new ConflictException("Already ended");
+
+        initiative.EndedAt = DateTime.UtcNow;
+
+        await _database.SaveChangesAsync();
+     }
+     public async Task FinalizeInitiativeAsync(Guid initiativeId) //Hï¿½r ska poï¿½ng ges till deltagare
+     {
+        var initiative = await _context.Initiatives
+            .Include(i => i.InitiativeParticipators) 
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
+
+        if (initiative == null || initiative.EndedAt != null)
+            return;
+
+        initiative.EndedAt = DateTime.UtcNow;
+
+        foreach (var participant in initiative.InitiativeParticipators)
+        {
+            try
+            {
+                var pointRequest = new EcoPointRequestDTO(
+                    initiative.CommunityId, 
+                    participant.UserId, 
+                    null, 
+                    initiative.EcoPointsPerParticipant ?? 0
+                );
+
+                await _ecoPointService.AwardEcoPointsUserAsync(pointRequest);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Not able to give members points.");
+            }
+        }
+
+        await _context.SaveChangesAsync();
+       }
+   }

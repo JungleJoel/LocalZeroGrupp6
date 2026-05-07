@@ -12,14 +12,9 @@ namespace backend.Mapping
                 .Map(dest => dest.EcoPoints,
                      src => src.EcoPointTransactions.Sum(t => t.Amount))
                 .Map(dest => dest.IsCommunityManager,
-                     src => src.CommunityResidents
-                               .Where(r => r.UserId == src.Id)
-                               .Select(r => (bool?)r.IsManager)
-                               .FirstOrDefault())
+                     src => (bool?)src.CommunityResident!.IsManager)
                 .Map(dest => dest.Community,
-                     src => src.CommunityResidents
-                         .Select(cr => cr.Community)
-                         .FirstOrDefault());
+                     src => src.CommunityResident!.Community);
 
             config.NewConfig<Community, CommunityDTO>()
                 .Map(dest => dest.EcoPoints,

@@ -58,12 +58,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ICommunityService, CommunityService>();
+builder.Services.AddScoped<ICommunityValidationService>(sp => (CommunityService)sp.GetRequiredService<ICommunityService>());
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
 builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IEcoPointService>());
+builder.Services.AddScoped<ISustainabilityTrackerService, SustainabilityTrackerService>();
 builder.Services.AddScoped<InitiativeService>();
 builder.Services.AddHostedService<InitiativeCleanupService>();
+
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 
@@ -71,6 +75,7 @@ var app = builder.Build();
 
 app.UseCors();
 
+// Configure the HTTP request pipeline.import { Button } from "@/components/ui/button" Stashed changes
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

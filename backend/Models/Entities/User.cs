@@ -23,7 +23,7 @@ public partial class User
 
     public virtual ICollection<CommunityJoinRequest> CommunityJoinRequestUsers { get; set; } = new List<CommunityJoinRequest>();
 
-    public virtual ICollection<CommunityResident> CommunityResidents { get; set; } = new List<CommunityResident>();
+    public virtual CommunityResident? CommunityResident { get; set; }
 
     public virtual ICollection<DirectMessage> DirectMessageRecipients { get; set; } = new List<DirectMessage>();
 

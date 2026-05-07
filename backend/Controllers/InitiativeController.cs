@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using backend.Interfaces;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
 using backend.Services;
@@ -12,9 +13,9 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class InitiativeController : ControllerBase
 {
-    private readonly InitiativeService _initiativeService;
+    private readonly IInitiativeService _initiativeService;
 
-    public InitiativeController(InitiativeService initiativeService)
+    public InitiativeController(IInitiativeService initiativeService)
     {
         _initiativeService = initiativeService;
     }
