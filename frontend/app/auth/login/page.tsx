@@ -34,7 +34,7 @@ export default function Login() {
       });
 
       if (response.ok) {
-        router.replace("/home");
+        router.replace("/community");
       } else {
         const json = await response.json();
         throw new Error(json.detail || "Login failed");

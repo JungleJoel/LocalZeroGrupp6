@@ -65,9 +65,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
 builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IEcoPointService>());
 builder.Services.AddScoped<ISustainabilityTrackerService, SustainabilityTrackerService>();
-builder.Services.AddScoped<InitiativeService>();
-builder.Services.AddHostedService<InitiativeCleanupService>();
-
+builder.Services.AddScoped<IInitiativeService, InitiativeService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 

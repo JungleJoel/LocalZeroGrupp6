@@ -27,6 +27,13 @@ public class InitiativeController : ControllerBase
         return Ok(initiatives);
     }
 
+    [HttpGet("community/{communityId}")]
+    public async Task<ActionResult<List<InitiativeDTO>>> GetByCommunity(Guid communityId)
+    {
+        var initiatives = await _initiativeService.GetByCommunityIdAsync(communityId);
+        return Ok(initiatives);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<InitiativeDTO>> GetById(Guid id)
     {

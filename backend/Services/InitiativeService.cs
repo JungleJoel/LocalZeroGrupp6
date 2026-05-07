@@ -12,13 +12,12 @@ namespace backend.Services;
 public class InitiativeService : IInitiativeService
 {
     private readonly ApplicationDbContext _database;
-    private readonly ApplicationDbContext _context;
 private readonly IEcoPointService _ecoPointService;
 private readonly ILogger<InitiativeService> _logger;
 
     public InitiativeService(ApplicationDbContext context, IEcoPointService ecoPointService, ILogger<InitiativeService> logger)
 {
-    _context = context;
+    _database = context;
     _ecoPointService = ecoPointService;
     _logger = logger;
 }
@@ -52,7 +51,7 @@ private readonly ILogger<InitiativeService> _logger;
 
     public async Task<List<InitiativeDTO>> GetInitiativesAsync()
     {
-        return (await _context.Initiatives.ToListAsync())
+        return (await _database.Initiatives.ToListAsync())
         .Adapt<List<InitiativeDTO>>();
     }
 
@@ -99,6 +98,15 @@ private readonly ILogger<InitiativeService> _logger;
         await _database.SaveChangesAsync();
     }
 
+    public async Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId)
+    {
+        return (await _database.Initiatives
+            .Where(i => i.CommunityId == communityId && i.EndedAt == null)
+            .OrderBy(i => i.StartsAt)
+            .ToListAsync())
+            .Adapt<List<InitiativeDTO>>();
+    }
+
     public async Task EndInitiativeAsync(Guid id, Guid userId)
     {
         var initiative = await _database.Initiatives
@@ -119,7 +127,7 @@ private readonly ILogger<InitiativeService> _logger;
      }
      public async Task FinalizeInitiativeAsync(Guid initiativeId) //H�r ska po�ng ges till deltagare
      {
-        var initiative = await _context.Initiatives
+        var initiative = await _database.Initiatives
             .Include(i => i.InitiativeParticipators) 
             .FirstOrDefaultAsync(i => i.Id == initiativeId);
 
@@ -133,10 +141,11 @@ private readonly ILogger<InitiativeService> _logger;
             try
             {
                 var pointRequest = new EcoPointRequestDTO(
-                    initiative.CommunityId, 
-                    participant.UserId, 
-                    null, 
-                    initiative.EcoPointsPerParticipant ?? 0
+                    initiative.CommunityId,
+                    participant.UserId,
+                    null,
+                    initiative.EcoPointsPerParticipant ?? 0,
+                    null
                 );
 
                 await _ecoPointService.AwardEcoPointsUserAsync(pointRequest);
@@ -147,6 +156,6 @@ private readonly ILogger<InitiativeService> _logger;
             }
         }
 
-        await _context.SaveChangesAsync();
+        await _database.SaveChangesAsync();
        }
    }

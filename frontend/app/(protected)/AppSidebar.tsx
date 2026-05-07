@@ -15,19 +15,19 @@ import {
 import { UserDTO } from "@/types/userDTO";
 import {
   HeartHandshake,
-  Home,
   Leaf,
+  ListTree,
   MessageSquare,
+  PlusCircle,
   Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: "Home", href: "/home", icon: Home },
-  { label: "Community", href: "/community", icon: HeartHandshake },
-  { label: "Create Initiative", href: "/createInitiatives", icon: MessageSquare },
-  { label: "Initiatives", href: "/initiatives", icon: Leaf },
+  { label: "My Community", href: "/community", icon: HeartHandshake },
+  { label: "Create Initiative", href: "/createInitiatives", icon: PlusCircle },
+  { label: "Initiatives", href: "/initiatives", icon: ListTree },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Settings", href: "/account/settings", icon: Settings },
 ];
@@ -44,10 +44,10 @@ export function AppSidebar({user}:{user: UserDTO}) {
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
             <span className="text-base font-semibold tracking-tight">
-              Local Zero
+              Welcome, {user.firstName}
             </span>
             <span className="text-sm text-muted-foreground">
-              Welcome, {user.firstName} 
+              <span className="text-primary font-bold">{user.ecoPoints}</span> Eco Point{user.ecoPoints == 1 ? null : "s"} 
             </span>
           </div>
         </div>

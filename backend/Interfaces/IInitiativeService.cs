@@ -14,4 +14,6 @@ public interface IInitiativeService
     Task CancelInitiativeAsync(Guid id, Guid userId);
 
     Task EndInitiativeAsync(Guid id, Guid userId);
+
+    Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId);
 }

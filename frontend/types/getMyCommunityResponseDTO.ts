@@ -7,14 +7,11 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { CommunityDTO } from './communityDTO';
 
 
-export interface CommunityDTO { 
-    id: string;
-    name: string;
-    ecoPoints: number;
-    residentsCount: number;
-    latitude: number | null;
-    longitude: number | null;
+export interface GetMyCommunityResponseDTO { 
+    community: CommunityDTO;
+    isCommunityManager: boolean;
 }
 
