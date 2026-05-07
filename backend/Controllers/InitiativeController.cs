@@ -41,7 +41,7 @@ public class InitiativeController : ControllerBase
         return Ok(initiative);
     }
 
-    [HttpPost]
+    [HttpPost("create")]
     public async Task<ActionResult<InitiativeDTO>> Create(CreateInitiativeRequestDTO request)
     {
         var userId = GetUserId();
@@ -51,7 +51,7 @@ public class InitiativeController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}/cancel")]
     public async Task<ActionResult> Cancel(Guid id)
     {
         var userId = GetUserId();
