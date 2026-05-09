@@ -1,6 +1,7 @@
 'use client';
 
 import { CommunityDTO } from "@/types/communityDTO";
+import { MyJoinRequestDTO } from "@/types/myJoinRequestDTO";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/lib/config";
@@ -13,36 +14,101 @@ export default function SearchCommunity() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [communities, setCommunities] = useState<CommunityDTO[]>([]);
   const [query, setQuery] = useState<string>("");
+  const [pendingRequest, setPendingRequest] = useState<MyJoinRequestDTO | null>(null);
 
   async function getAllCommunities() {
-    try {
-      setIsLoading(true);
+    const response = await fetch(`${API_BASE_URL}/Community/getCommunities`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
 
-      const response = await fetch(`${API_BASE_URL}/Community/getCommunities`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        setCommunities(await response.json());
-      } else {
-        const json = await response.json();
-        throw new Error(json.detail || "Could not get communities");
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-      console.log(error);
-    } finally {
-      setIsLoading(false);
+    if (response.ok) {
+      setCommunities(await response.json());
+    } else {
+      const json = await response.json();
+      throw new Error(json.detail || "Could not get communities");
     }
   }
 
+  async function getMyJoinRequest() {
+    const response = await fetch(`${API_BASE_URL}/Community/my-join-request`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      setPendingRequest(await response.json());
+    }
+    // 404 = no pending request, which is fine
+  }
+
   useEffect(() => {
-    getAllCommunities();
+    async function loadAll() {
+      try {
+        setIsLoading(true);
+        await Promise.all([getAllCommunities(), getMyJoinRequest()]);
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadAll();
   }, []);
+
+  async function handleJoin(community: CommunityDTO) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/Community/${community.id}/join`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.ok) {
+        const created: MyJoinRequestDTO = {
+          id: (await response.json()).id,
+          communityId: community.id,
+          communityName: community.name,
+          createdAt: new Date().toISOString(),
+        };
+        setPendingRequest(created);
+        toast.success(`Join request sent to ${community.name}`);
+      } else {
+        const json = await response.json();
+        toast.error(json.detail || "Could not send join request");
+      }
+    } catch {
+      toast.error("Could not send join request");
+    }
+  }
+
+  async function handleCancel(community: CommunityDTO) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/Community/${community.id}/cancel-request`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (response.ok) {
+        setPendingRequest(null);
+        toast.success("Join request cancelled");
+      } else {
+        const json = await response.json();
+        toast.error(json.detail || "Could not cancel join request");
+      }
+    } catch {
+      toast.error("Could not cancel join request");
+    }
+  }
 
   const filtered = communities.filter((c) =>
     c.name.toLowerCase().includes(query.toLowerCase())
@@ -92,7 +158,9 @@ export default function SearchCommunity() {
               <CommunityCard
                 key={community.id}
                 community={community}
-                onJoin={(c) => alert("not implemented")}
+                pendingRequestCommunityId={pendingRequest?.communityId ?? null}
+                onJoin={handleJoin}
+                onCancel={handleCancel}
               />
             ))}
           </div>
