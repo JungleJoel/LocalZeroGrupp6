@@ -67,6 +67,19 @@ public class InitiativeController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("{initiativeId}/join")]
+    public async Task<InitiativeDTO> JoinInitiative(Guid initiativeId)
+    {
+        return await _initiativeService.JoinInitiativeAsync(initiativeId, GetUserId());
+    }
+
+    [HttpDelete("{initiativeId}/leave")]
+    public async Task<ActionResult> LeaveInitiative(Guid initiativeId)
+    {
+        await _initiativeService.LeaveInitiativeAsync(initiativeId, GetUserId());
+        return Ok();
+    }
+
     private Guid GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);

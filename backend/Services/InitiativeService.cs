@@ -6,6 +6,8 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
 using backend.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Services;
 
@@ -153,6 +155,47 @@ public class InitiativeService : IInitiativeService
         );
 
         await _ecoPointService.AwardInitiativeEcoPointsAsync(ecoPointRequest);
+    }
+
+    public async Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId)
+    {
+        var initiative = await _database.Initiatives
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
+        
+        if (initiative == null)
+        {
+            throw new NotFoundException("Initiative not found");
+        }
+        
+        if (initiative.EndedAt != null)
+        {
+            throw new ConflictException("Initiative has already ended");
+        }
+        
+        var initiativeParticipator = new InitiativeParticipator
+        {
+            InitiativeId = initiativeId,
+            UserId = userId
+        };
+        
+        await _database.InitiativeParticipators.AddAsync(initiativeParticipator);
+        await _database.SaveChangesAsync();
+        
+        return initiative.Adapt<InitiativeDTO>();
+    }
+    
+    public async Task LeaveInitiativeAsync(Guid initiativeId, Guid userId)
+    {
+        var initiativeParticipator = await _database.InitiativeParticipators
+            .FirstOrDefaultAsync(i => i.InitiativeId == initiativeId && i.UserId == userId);
+        
+        if (initiativeParticipator == null)
+        {
+            throw new NotFoundException("Initiative participator not found");
+        }
+        
+        _database.InitiativeParticipators.Remove(initiativeParticipator);
+        await _database.SaveChangesAsync();
     }
 
     private async Task<List<UserDTO>> GetUsersFromInitiativeAsync(Initiative initiative)

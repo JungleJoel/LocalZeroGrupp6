@@ -18,4 +18,8 @@ public interface IInitiativeService
     Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId);
 
     Task FinalizeInitiativeAsync(Guid initiativeId);
+
+    Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId);
+
+    Task LeaveInitiativeAsync(Guid initiativeId, Guid userId);
 }
