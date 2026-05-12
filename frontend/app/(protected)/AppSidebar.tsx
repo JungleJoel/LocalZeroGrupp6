@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { UserDTO } from "@/types/userDTO";
 import {
+  Bike,
   HeartHandshake,
   Home,
   Leaf,
@@ -28,6 +29,7 @@ const navItems = [
   { label: "Community", href: "/community", icon: HeartHandshake },
   { label: "Create Initiative", href: "/createInitiatives", icon: MessageSquare },
   { label: "Initiatives", href: "/initiatives", icon: Leaf },
+  { label: "Eco Actions", href: "/ecoactions", icon: Bike },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Settings", href: "/account/settings", icon: Settings },
 ];
