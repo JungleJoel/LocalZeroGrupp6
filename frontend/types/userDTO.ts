@@ -16,8 +16,9 @@ export interface UserDTO {
     lastName: string;
     email: string;
     avatarImageUrl: string | null;
-    community: CommunityDTO | null;
     ecoPoints: number;
+    isCommunityManager: boolean | null;
+    community: CommunityDTO | null;
     createdAt: string;
 }
 

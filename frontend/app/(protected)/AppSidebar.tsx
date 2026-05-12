@@ -12,13 +12,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserDTO } from "@/types/userDTO";
 import {
   Bike,
-  HeartHandshake,
   Home,
+  HeartHandshake,
   Leaf,
+  ListTree,
   MessageSquare,
+  PlusCircle,
   Settings,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,7 +30,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { label: "Home", href: "/home", icon: Home },
   { label: "Community", href: "/community", icon: HeartHandshake },
-  { label: "Create Initiative", href: "/createInitiatives", icon: MessageSquare },
+  { label: "Create Initiative", href: "/createInitiatives", icon: PlusCircle },
   { label: "Initiatives", href: "/initiatives", icon: Leaf },
   { label: "Eco Actions", href: "/ecoactions", icon: Bike },
   { label: "Messages", href: "/messages", icon: MessageSquare },
@@ -41,15 +44,18 @@ export function AppSidebar({user}:{user: UserDTO}) {
     <Sidebar>
       <SidebarHeader className="px-5 py-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white">
-            <Leaf className="h-5 w-5" />
-          </div>
+          <Avatar size="lg" className="rounded-xl">
+            <AvatarImage src={user.avatarImageUrl ?? undefined} alt={user.firstName} />
+            <AvatarFallback className="rounded-xl bg-primary text-white font-semibold">
+              {user.firstName[0]}{user.lastName[0]}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex flex-col gap-0.5 leading-none">
             <span className="text-base font-semibold tracking-tight">
-              Local Zero
+              Welcome, {user.firstName}
             </span>
             <span className="text-sm text-muted-foreground">
-              Welcome, {user.firstName} 
+              <span className="text-primary font-bold">{user.ecoPoints}</span> Eco Point{user.ecoPoints == 1 ? null : "s"} 
             </span>
           </div>
         </div>

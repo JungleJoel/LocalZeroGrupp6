@@ -27,6 +27,13 @@ public class InitiativeController : ControllerBase
         return Ok(initiatives);
     }
 
+    [HttpGet("community/{communityId}")]
+    public async Task<ActionResult<List<InitiativeDTO>>> GetByCommunity(Guid communityId)
+    {
+        var initiatives = await _initiativeService.GetByCommunityIdAsync(communityId);
+        return Ok(initiatives);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<InitiativeDTO>> GetById(Guid id)
     {
@@ -34,7 +41,7 @@ public class InitiativeController : ControllerBase
         return Ok(initiative);
     }
 
-    [HttpPost]
+    [HttpPost("create")]
     public async Task<ActionResult<InitiativeDTO>> Create(CreateInitiativeRequestDTO request)
     {
         var userId = GetUserId();
@@ -44,7 +51,7 @@ public class InitiativeController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id}/cancel")]
     public async Task<ActionResult> Cancel(Guid id)
     {
         var userId = GetUserId();
@@ -57,6 +64,19 @@ public class InitiativeController : ControllerBase
     {
         var userId = GetUserId();
         await _initiativeService.EndInitiativeAsync(id, userId);
+        return Ok();
+    }
+
+    [HttpPost("{initiativeId}/join")]
+    public async Task<InitiativeDTO> JoinInitiative(Guid initiativeId)
+    {
+        return await _initiativeService.JoinInitiativeAsync(initiativeId, GetUserId());
+    }
+
+    [HttpDelete("{initiativeId}/leave")]
+    public async Task<ActionResult> LeaveInitiative(Guid initiativeId)
+    {
+        await _initiativeService.LeaveInitiativeAsync(initiativeId, GetUserId());
         return Ok();
     }
 

@@ -8,17 +8,8 @@ export default function Page() {
       <Link href="/auth/login">
         <Button>/auth/login</Button>
       </Link>
-      <Link href="/home">
-        <Button>/home (protected)</Button>
-      </Link>
-      <Link href="/auth/register">
-        <Button>/auth/register</Button>
-      </Link>
-      <Link href="/account/settings">
-        <Button>/account/settings (protected)</Button>
-      </Link>
-      <Link href="/account/settings">
-        <Button>/account/settings (protected)</Button>
+      <Link href="/community">
+        <Button>/community (protected)</Button>
       </Link>
     </div>
   );

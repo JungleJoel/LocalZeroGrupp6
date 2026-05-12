@@ -6,20 +6,33 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
 using backend.Interfaces;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Services;
 
 public class InitiativeService : IInitiativeService
 {
     private readonly ApplicationDbContext _database;
+    private readonly IEcoPointTransactions _ecoPointService;
+    private readonly ILogger<InitiativeService> _logger;
 
-    public InitiativeService(ApplicationDbContext database)
+    public InitiativeService(ApplicationDbContext context, IEcoPointTransactions ecoPointTransactions,
+        ILogger<InitiativeService> logger)
     {
-        _database = database;
+        _database = context;
+        _ecoPointService = ecoPointTransactions;
+        _logger = logger;
     }
 
     public async Task<InitiativeDTO> CreateInitiativeAsync(Guid userId, CreateInitiativeRequestDTO request)
     {
+        if (request.EcoPointsPerParticipant <= 0)
+            throw new ArgumentException("Eco points per participant must be greater than zero.");
+
+        if (request.EstimatedEndsAt < DateTime.UtcNow)
+            throw new ArgumentException("Estimated end date must be in the future.");
+
         var initiative = new Initiative
         {
             Id = Guid.NewGuid(),
@@ -48,7 +61,7 @@ public class InitiativeService : IInitiativeService
     public async Task<List<InitiativeDTO>> GetInitiativesAsync()
     {
         return (await _database.Initiatives.ToListAsync())
-        .Adapt<List<InitiativeDTO>>();
+            .Adapt<List<InitiativeDTO>>();
     }
 
     public async Task<InitiativeDTO> GetInitiative(Guid id)
@@ -59,6 +72,7 @@ public class InitiativeService : IInitiativeService
         {
             throw new NotFoundException($"Initiative with id {id} not found");
         }
+
         return initiative.Adapt<InitiativeDTO>();
     }
 
@@ -78,6 +92,15 @@ public class InitiativeService : IInitiativeService
         await _database.SaveChangesAsync();
     }
 
+    public async Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId)
+    {
+        return (await _database.Initiatives
+                .Where(i => i.CommunityId == communityId && i.EndedAt == null)
+                .OrderBy(i => i.StartsAt)
+                .ToListAsync())
+            .Adapt<List<InitiativeDTO>>();
+    }
+
     public async Task EndInitiativeAsync(Guid id, Guid userId)
     {
         var initiative = await _database.Initiatives
@@ -95,5 +118,101 @@ public class InitiativeService : IInitiativeService
         initiative.EndedAt = DateTime.UtcNow;
 
         await _database.SaveChangesAsync();
+    }
+
+    public async Task FinalizeInitiativeAsync(Guid initiativeId) //H�r ska po�ng ges till deltagare
+    {
+        var initiative = await _database.Initiatives
+            .Include(i => i.InitiativeParticipators)
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
+
+        if (initiative == null)
+        {
+            _logger.LogError("Initiative not found. Terminating finalization.");
+            return;
+        }
+
+        if (initiative.EndedAt != null)
+        {
+            _logger.LogError("Initiative has already ended. Terminating finalization.");
+            return;
+        }
+
+        if (initiative.EcoPointsPerParticipant == 0)
+        {
+            _logger.LogError("Eco points per participant cannot be zero. Terminating finalization.");
+            throw new ArgumentException("Eco points per participant cannot be zero.");
+        }
+
+        initiative.EndedAt = DateTime.UtcNow;
+
+        List<UserDTO> users = await GetUsersFromInitiativeAsync(initiative);
+
+        InitiativeEcoPointRequestDTO ecoPointRequest = new InitiativeEcoPointRequestDTO(
+            initiativeId,
+            users,
+            initiative.EcoPointsPerParticipant
+        );
+
+        await _ecoPointService.AwardInitiativeEcoPointsAsync(ecoPointRequest);
+    }
+
+    public async Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId)
+    {
+        var initiative = await _database.Initiatives
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
+        
+        if (initiative == null)
+        {
+            throw new NotFoundException("Initiative not found");
+        }
+        
+        if (initiative.EndedAt != null)
+        {
+            throw new ConflictException("Initiative has already ended");
+        }
+        
+        var initiativeParticipator = new InitiativeParticipator
+        {
+            InitiativeId = initiativeId,
+            UserId = userId
+        };
+        
+        await _database.InitiativeParticipators.AddAsync(initiativeParticipator);
+        await _database.SaveChangesAsync();
+        
+        return initiative.Adapt<InitiativeDTO>();
+    }
+    
+    public async Task LeaveInitiativeAsync(Guid initiativeId, Guid userId)
+    {
+        var initiativeParticipator = await _database.InitiativeParticipators
+            .FirstOrDefaultAsync(i => i.InitiativeId == initiativeId && i.UserId == userId);
+        
+        if (initiativeParticipator == null)
+        {
+            throw new NotFoundException("Initiative participator not found");
+        }
+        
+        _database.InitiativeParticipators.Remove(initiativeParticipator);
+        await _database.SaveChangesAsync();
+    }
+
+    private async Task<List<UserDTO>> GetUsersFromInitiativeAsync(Initiative initiative)
+    {
+        List<UserDTO> users = new List<UserDTO>();
+
+        foreach (var participant in initiative.InitiativeParticipators)
+        {
+            var user = await _database.FindAsync<User>(participant.UserId);
+            if (user != null)
+            {
+                var userDto = user.Adapt<UserDTO>();
+                users.Add(userDto);
+
+            }
+        }
+
+        return users;
     }
 }

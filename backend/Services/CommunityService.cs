@@ -56,10 +56,10 @@ public class CommunityService : ICommunityService, ICommunityValidationService
             throw new ConflictException("User is already a member in community");
 
         var existingRequest = await _database.CommunityJoinRequests
-            .AnyAsync(resident => resident.UserId == userId && resident.CommunityId == communityId && resident.IsAccepted == null);
-        
-        if(existingRequest)
-            throw new ConflictException("User already have a pending join request for this community");
+            .AnyAsync(r => r.UserId == userId && r.IsAccepted == null);
+
+        if (existingRequest)
+            throw new ConflictException("User already has a pending join request");
         
         var joinRequest = new CommunityJoinRequest
         {
@@ -76,20 +76,44 @@ public class CommunityService : ICommunityService, ICommunityValidationService
         return joinRequest.Adapt<CommunityJoinRequestDTO>();
     }
 
-    public async Task<List<CommunityJoinRequestDTO>> GetRequestsAsync(Guid managerUserId, Guid communityId)
+    public async Task<MyJoinRequestDTO?> GetMyJoinRequestAsync(Guid userId)
+    {
+        var request = await _database.CommunityJoinRequests
+            .Include(r => r.Community)
+            .FirstOrDefaultAsync(r => r.UserId == userId && r.IsAccepted == null);
+
+        if (request == null) return null;
+
+        return new MyJoinRequestDTO(request.Id, request.CommunityId, request.Community.Name, request.CreatedAt);
+    }
+
+    public async Task CancelJoinRequestAsync(Guid userId, Guid communityId)
+    {
+        var request = await _database.CommunityJoinRequests
+            .FirstOrDefaultAsync(r => r.UserId == userId && r.CommunityId == communityId && r.IsAccepted == null);
+
+        if (request == null)
+            throw new NotFoundException("No pending join request found");
+
+        _database.CommunityJoinRequests.Remove(request);
+        await _database.SaveChangesAsync();
+    }
+
+    public async Task<List<CommunityJoinRequestWithUserDTO>> GetRequestsAsync(Guid managerUserId, Guid communityId)
     {
         bool isManager = await IsManagerAsync(managerUserId, communityId);
 
         if (!isManager)
-        {
             throw new ConflictException("Not a manager over this community");
-        }
-        
-        var requests = await  _database.CommunityJoinRequests
-            .Where(resident => resident.CommunityId == communityId)
+
+        var requests = await _database.CommunityJoinRequests
+            .Include(r => r.User)
+            .Where(r => r.CommunityId == communityId && r.IsAccepted == null)
             .ToListAsync();
-        
-        return requests.Adapt<List<CommunityJoinRequestDTO>>();
+
+        return requests.Select(r => new CommunityJoinRequestWithUserDTO(
+            r.Id, r.UserId, r.User.FirstName, r.User.LastName, r.CommunityId, r.IsAccepted, r.CreatedAt
+        )).ToList();
     }
 
     public async Task<CommunityJoinRequestDTO> ApproveRequestAsync(Guid requestId, Guid managerUserId, Guid communityId)
@@ -207,6 +231,24 @@ public class CommunityService : ICommunityService, ICommunityValidationService
         );
     }
     
+    public async Task<List<CommunityMemberDTO>> GetMembersAsync(Guid communityId, Guid requestingUserId)
+    {
+        var isResident = await IsResidentInCommunityAsync(communityId, requestingUserId);
+        if (!isResident)
+            throw new ForbiddenException("Not a member of this community");
+
+        var residents = await _database.CommunityResidents
+            .Include(r => r.User)
+            .Where(r => r.CommunityId == communityId)
+            .OrderByDescending(r => r.IsManager)
+            .ThenBy(r => r.User.FirstName)
+            .ToListAsync();
+
+        return residents.Select(r => new CommunityMemberDTO(
+            r.UserId, r.User.FirstName, r.User.LastName, r.User.AvatarImageUrl, r.IsManager, r.CreatedAt
+        )).ToList();
+    }
+
     public async Task<bool> IsResidentInCommunityAsync(Guid communityId, Guid userId)
     {
         return await _database.CommunityResidents.AnyAsync(x => x.UserId == userId && x.CommunityId == communityId);

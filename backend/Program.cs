@@ -65,7 +65,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
 builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IEcoPointService>());
 builder.Services.AddScoped<IEcoActionsService, EcoActionsService>();
-builder.Services.AddScoped<InitiativeService>();
+builder.Services.AddScoped<IInitiativeService, InitiativeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
@@ -74,7 +74,7 @@ var app = builder.Build();
 
 app.UseCors();
 
-// Configure the HTTP request pipeline.import { Button } from "@/components/ui/button" Stashed changes
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
