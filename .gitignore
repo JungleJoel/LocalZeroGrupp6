@@ -767,3 +767,5 @@ backend/Models/Entities/*
 .next/
 
 package-lock.json
+
+../.idea/

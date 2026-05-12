@@ -107,7 +107,7 @@ public class EcoPointService : IEcoPointService
                 user.Id,
                 initiativeEcoPointRequestDTO.InitiativeId,
                 initiativeEcoPointRequestDTO.EcoPointAmount,
-                initiativeEcoPointRequestDTO.Reason
+                Reason: null
             );
             
             var ecoPointTransaction = await AwardEcoPointsUserAsync(ecoPointRequest);

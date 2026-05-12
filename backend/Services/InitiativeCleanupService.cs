@@ -1,16 +1,19 @@
 using backend.Data;
+using backend.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services;
 
 public class InitiativeCleanupService : BackgroundService
 {
-    private readonly IServiceProvider _services;
+    private readonly ApplicationDbContext _database;
+    private readonly IInitiativeService _initiativeService;
     private readonly ILogger<InitiativeCleanupService> _logger;
 
-    public InitiativeCleanupService(IServiceProvider services, ILogger<InitiativeCleanupService> logger)
+    public InitiativeCleanupService(ApplicationDbContext database, IInitiativeService initiativeService, ILogger<InitiativeCleanupService> logger)
     {
-        _services = services;
+        _database = database;
+        _initiativeService = initiativeService;
         _logger = logger;
     }
 
@@ -30,21 +33,15 @@ public class InitiativeCleanupService : BackgroundService
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Initiative Cleanup Service stoppas...");
+            _logger.LogInformation("Initiative Cleanup Service is terminating...");
         }
     }
 
     private async Task RunCleanupAsync()
     {
-        
-        using var scope = _services.CreateScope();
-        
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var initiativeService = scope.ServiceProvider.GetRequiredService<InitiativeService>();
-
         var now = DateTime.UtcNow;
 
-        var expiredInitiativeIds = await context.Initiatives
+        var expiredInitiativeIds = await _database.Initiatives
             .Where(i => i.EndedAt == null && i.EstimatedEndsAt < now)
             .Select(i => i.Id)
             .ToListAsync();
@@ -58,7 +55,7 @@ public class InitiativeCleanupService : BackgroundService
                 try
                 {
                    
-                    await initiativeService.FinalizeInitiativeAsync(id);
+                    await _initiativeService.FinalizeInitiativeAsync(id);
                 }
                 catch (Exception ex)
                 {
