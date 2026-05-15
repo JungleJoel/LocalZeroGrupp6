@@ -9,6 +9,7 @@ public record InitiativeDTO(
     Guid? CategoryId,
     Guid? PresetId,
     bool IsPublic,
+    bool? IsParticipating,
     double Latitude,
     double Longitude,
     DateTime StartsAt,

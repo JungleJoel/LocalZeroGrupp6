@@ -5,7 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 import { InitiativeDTO } from "@/types/initiativeDTO";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, CalendarCheck, Leaf, MapPin, Lock, Globe } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  CalendarCheck,
+  Leaf,
+  MapPin,
+  Lock,
+  Globe,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -28,6 +37,8 @@ export default function InitiativePage() {
   const router = useRouter();
   const [initiative, setInitiative] = useState<InitiativeDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isJoined, setIsJoined] = useState(false);
+  const [isJoinLoading, setIsJoinLoading] = useState(false);
 
   useEffect(() => {
     async function fetchInitiative() {
@@ -36,7 +47,9 @@ export default function InitiativePage() {
           credentials: "include",
         });
         if (response.ok) {
-          setInitiative(await response.json());
+          const data : InitiativeDTO = await response.json();
+          setInitiative(data);
+          setIsJoined(data.isParticipating);
         } else {
           throw new Error("Could not load initiative");
         }
@@ -64,6 +77,26 @@ export default function InitiativePage() {
       </div>
     );
   }
+  
+  async function handleJoinLeave() {
+    setIsJoinLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/Initiative/${id}/${isJoined ? "leave" : "join"}`,
+        {
+          method: isJoined ? "DELETE" : "POST", // leave=DELETE, join=POST
+          credentials: "include",
+        }
+      );
+      if (!response.ok) throw new Error("Action failed");
+      setIsJoined(!isJoined);
+      toast.success(isJoined ? "Left initiative" : "Joined initiative");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsJoinLoading(false);
+    }
+  }
 
   const status = getStatus(initiative);
 
@@ -82,32 +115,75 @@ export default function InitiativePage() {
           </Button>
         </div>
 
+        {/* Title & Status */}
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold sm:text-4xl">{initiative.name}</h1>
+          <h1 className="text-3xl font-semibold sm:text-4xl">
+            {initiative.name}
+          </h1>
           <span
             className={`rounded-full px-3 py-1 text-sm font-medium ${
               status === "active"
                 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                 : status === "upcoming"
-                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                : "bg-muted text-muted-foreground"
+                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                  : "bg-muted text-muted-foreground"
             }`}
           >
-            {status === "active" ? "Active" : status === "upcoming" ? "Upcoming" : "Ended"}
+            {status === "active"
+              ? "Active"
+              : status === "upcoming"
+                ? "Upcoming"
+                : "Ended"}
           </span>
+
+          {status !== "ended" && (
+            <Button
+              variant={isJoined ? "outline" : "default"}
+              onClick={handleJoinLeave}
+              disabled={isJoinLoading}
+            >
+              {isJoinLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isJoined ? (
+                "Leave"
+              ) : (
+                "Join"
+              )}
+            </Button>
+          )}
+
+          <Button style={{ marginLeft: "auto" }}>
+            {status === "active" ? (
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${initiative.latitude},${initiative.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <MapPin className="h-4 w-4" />
+                View on map
+              </a>
+            ) : (
+              <a>Map not Available</a>
+            )}
+          </Button>
         </div>
 
         {/* Details */}
         <div className="mt-6 grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
           {/* Description */}
           <div className="col-span-full rounded-xl border bg-card p-5 shadow-sm">
-            <h2 className="mb-2 text-sm font-medium text-muted-foreground">About this initiative</h2>
+            <h2 className="mb-2 text-sm font-medium text-muted-foreground">
+              About this initiative
+            </h2>
             <p className="leading-relaxed">{initiative.description}</p>
           </div>
 
           {/* Dates */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
-            <h2 className="mb-3 text-sm font-medium text-muted-foreground">Dates</h2>
+            <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+              Dates
+            </h2>
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -115,7 +191,9 @@ export default function InitiativePage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Starts</p>
-                  <p className="font-medium">{formatDate(initiative.startsAt)}</p>
+                  <p className="font-medium">
+                    {formatDate(initiative.startsAt)}
+                  </p>
                 </div>
               </div>
               {initiative.estimatedEndsAt && (
@@ -124,8 +202,12 @@ export default function InitiativePage() {
                     <CalendarCheck className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Estimated end</p>
-                    <p className="font-medium">{formatDate(initiative.estimatedEndsAt)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Estimated end
+                    </p>
+                    <p className="font-medium">
+                      {formatDate(initiative.estimatedEndsAt)}
+                    </p>
                   </div>
                 </div>
               )}
@@ -136,7 +218,9 @@ export default function InitiativePage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Ended</p>
-                    <p className="font-medium">{formatDate(initiative.endedAt)}</p>
+                    <p className="font-medium">
+                      {formatDate(initiative.endedAt)}
+                    </p>
                   </div>
                 </div>
               )}
@@ -145,7 +229,9 @@ export default function InitiativePage() {
 
           {/* Location & visibility */}
           <div className="rounded-xl border bg-card p-5 shadow-sm">
-            <h2 className="mb-3 text-sm font-medium text-muted-foreground">Details</h2>
+            <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+              Details
+            </h2>
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -154,7 +240,8 @@ export default function InitiativePage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Location</p>
                   <p className="font-medium">
-                    {initiative.latitude.toFixed(4)}, {initiative.longitude.toFixed(4)}
+                    {initiative.latitude.toFixed(4)},{" "}
+                    {initiative.longitude.toFixed(4)}
                   </p>
                 </div>
               </div>
@@ -168,7 +255,9 @@ export default function InitiativePage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Visibility</p>
-                  <p className="font-medium">{initiative.isPublic ? "Public" : "Community only"}</p>
+                  <p className="font-medium">
+                    {initiative.isPublic ? "Public" : "Community only"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -176,8 +265,12 @@ export default function InitiativePage() {
                   <Leaf className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Eco points per participant</p>
-                  <p className="font-medium">{initiative.ecoPointsPerParticipant} pts</p>
+                  <p className="text-xs text-muted-foreground">
+                    Eco points per participant
+                  </p>
+                  <p className="font-medium">
+                    {initiative.ecoPointsPerParticipant} pts
+                  </p>
                 </div>
               </div>
             </div>

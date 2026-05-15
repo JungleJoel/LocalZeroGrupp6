@@ -9,13 +9,13 @@ public interface IInitiativeService
 
     Task<List<InitiativeDTO>> GetInitiativesAsync();
 
-    Task<InitiativeDTO> GetInitiative(Guid id);
+    Task<InitiativeDTO> GetInitiativeAsync(Guid initiativeId, Guid userId);
 
-    Task CancelInitiativeAsync(Guid id, Guid userId);
+    Task CancelInitiativeAsync(Guid initiativeId, Guid userId);
 
-    Task EndInitiativeAsync(Guid id, Guid userId);
+    Task EndInitiativeAsync(Guid initiativeId, Guid userId);
 
-    Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId);
+    Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId, Guid userId);
 
     Task FinalizeInitiativeAsync(Guid initiativeId);
 
