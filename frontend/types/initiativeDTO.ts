@@ -18,6 +18,7 @@ export interface InitiativeDTO {
     categoryId: string | null;
     presetId: string | null;
     isPublic: boolean;
+    isParticipating: boolean;
     latitude: number;
     longitude: number;
     startsAt: string;

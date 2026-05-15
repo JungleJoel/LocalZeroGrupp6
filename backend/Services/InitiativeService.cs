@@ -64,22 +64,27 @@ public class InitiativeService : IInitiativeService
             .Adapt<List<InitiativeDTO>>();
     }
 
-    public async Task<InitiativeDTO> GetInitiative(Guid id)
+    public async Task<InitiativeDTO> GetInitiativeAsync(Guid initiativeId, Guid userId)
     {
-        var initiative = await _database.Initiatives.FindAsync(id);
+        var result = await _database.Initiatives
+            .Where(i => i.Id == initiativeId)
+            .Select(i => new
+            {
+                Initiative = i,
+                IsParticipating = i.InitiativeParticipators.Any(p => p.UserId == userId)
+            })
+            .FirstOrDefaultAsync();
 
-        if (initiative == null)
-        {
-            throw new NotFoundException($"Initiative with id {id} not found");
-        }
+        if (result is null)
+            throw new NotFoundException("Initiative not found");
 
-        return initiative.Adapt<InitiativeDTO>();
+        return result.Initiative.Adapt<InitiativeDTO>() with { IsParticipating = result.IsParticipating };
     }
 
-    public async Task CancelInitiativeAsync(Guid id, Guid userId)
+    public async Task CancelInitiativeAsync(Guid inititativeId, Guid userId)
     {
         var initiative = await _database.Initiatives
-            .FirstOrDefaultAsync(i => i.Id == id);
+            .FirstOrDefaultAsync(i => i.Id == inititativeId);
 
         if (initiative == null)
             throw new NotFoundException("Initiative not found");
@@ -92,13 +97,21 @@ public class InitiativeService : IInitiativeService
         await _database.SaveChangesAsync();
     }
 
-    public async Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId)
+    public async Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId, Guid userId)
     {
-        return (await _database.Initiatives
-                .Where(i => i.CommunityId == communityId && i.EndedAt == null)
-                .OrderBy(i => i.StartsAt)
-                .ToListAsync())
-            .Adapt<List<InitiativeDTO>>();
+        var results = await _database.Initiatives
+            .Where(i => i.CommunityId == communityId && i.EndedAt == null)
+            .OrderBy(i => i.StartsAt)
+            .Select(i => new
+            {
+                Initiative = i,
+                IsParticipating = i.InitiativeParticipators.Any(p => p.UserId == userId)
+            })
+            .ToListAsync();
+
+        return results
+            .Select(x => x.Initiative.Adapt<InitiativeDTO>() with { IsParticipating = x.IsParticipating })
+            .ToList();
     }
 
     public async Task EndInitiativeAsync(Guid id, Guid userId)

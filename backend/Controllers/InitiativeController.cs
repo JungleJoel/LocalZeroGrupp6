@@ -30,14 +30,15 @@ public class InitiativeController : ControllerBase
     [HttpGet("community/{communityId}")]
     public async Task<ActionResult<List<InitiativeDTO>>> GetByCommunity(Guid communityId)
     {
-        var initiatives = await _initiativeService.GetByCommunityIdAsync(communityId);
+        var initiatives = await _initiativeService.GetByCommunityIdAsync(communityId, GetUserId());
         return Ok(initiatives);
     }
+    
 
     [HttpGet("{id}")]
     public async Task<ActionResult<InitiativeDTO>> GetById(Guid id)
     {
-        var initiative = await _initiativeService.GetInitiative(id);
+        var initiative = await _initiativeService.GetInitiativeAsync(id, GetUserId());
         return Ok(initiative);
     }
 
