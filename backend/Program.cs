@@ -67,6 +67,7 @@ builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IE
 builder.Services.AddScoped<IEcoActionsService, EcoActionsService>();
 builder.Services.AddScoped<IInitiativeService, InitiativeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IDirectMessageService, DirectMessageService>();
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 
