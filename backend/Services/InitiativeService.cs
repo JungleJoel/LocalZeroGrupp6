@@ -6,6 +6,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
 using backend.Interfaces;
+using backend.Services.EcoPoint;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,14 +15,14 @@ namespace backend.Services;
 public class InitiativeService : IInitiativeService
 {
     private readonly ApplicationDbContext _database;
-    private readonly IEcoPointTransactions _ecoPointService;
+    private readonly EcoPointCommandInvoker _ecoPointCommandInvoker;
     private readonly ILogger<InitiativeService> _logger;
 
-    public InitiativeService(ApplicationDbContext context, IEcoPointTransactions ecoPointTransactions,
+    public InitiativeService(ApplicationDbContext context, EcoPointCommandInvoker ecoPointCommandInvoker,
         ILogger<InitiativeService> logger)
     {
         _database = context;
-        _ecoPointService = ecoPointTransactions;
+        _ecoPointCommandInvoker = ecoPointCommandInvoker;
         _logger = logger;
     }
 
@@ -185,7 +186,7 @@ public class InitiativeService : IInitiativeService
             initiative.EcoPointsPerParticipant
         );
 
-        await _ecoPointService.AwardInitiativeEcoPointsAsync(ecoPointRequest);
+        await _ecoPointCommandInvoker.InvokeAsync(new AwardInitiativeEcoPointsCommand(ecoPointRequest));
     }
 
     public async Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId)
