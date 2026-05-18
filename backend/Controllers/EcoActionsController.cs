@@ -13,11 +13,11 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class EcoActionsController : ControllerBase
 {
-    private readonly IEcoActionsService _ecoActionsService;
+    private readonly IEcoPointService _ecoPointService;
 
-    public EcoActionsController(IEcoActionsService ecoActionsService)
+    public EcoActionsController(IEcoPointService ecoPointService)
     {
-        _ecoActionsService = ecoActionsService;
+        _ecoPointService = ecoPointService;
     }
 
     private Guid GetUserId() =>
@@ -31,7 +31,7 @@ public class EcoActionsController : ControllerBase
             throw new ForbiddenException("You can only log eco-actions for yourself");
         }
 
-        return await _ecoActionsService.AwardEcoAction(new EcoPointRequestDTO(
+        return await _ecoPointService.AwardEcoPointsUserAsync(new EcoPointRequestDTO(
             CommunityId: communityId,
             UserId: userId,
             InitiativeId: null,
@@ -48,12 +48,12 @@ public class EcoActionsController : ControllerBase
             throw new ForbiddenException("You can only view your own eco-actions");
         }
 
-        return await _ecoActionsService.GetEcoActionHistory(communityId, userId);
+        return await _ecoPointService.GetEcoActionHistoryAsync(communityId, userId);
     }
 
     [HttpGet("community/{communityId}/summary")]
     public async Task<CommunityEcoActionSummaryDTO> GetCommunitySummary(Guid communityId)
     {
-        return await _ecoActionsService.GetCommunityEcoActionSummary(communityId, GetUserId());
+        return await _ecoPointService.GetCommunityEcoActionSummaryAsync(communityId, GetUserId());
     }
 }
