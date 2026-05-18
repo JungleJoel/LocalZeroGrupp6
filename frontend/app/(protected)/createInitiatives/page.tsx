@@ -16,7 +16,7 @@ import { sv } from "date-fns/locale/sv";
 
 registerLocale("sv", sv);
 
-const MapInput = dynamic(() => import("./mapinput"), {
+const MapInput = dynamic(() => import("@/components/ui/mapinput"), {
   ssr: false,
   loading: () => <div className="h-64 w-full bg-muted animate-pulse rounded-md flex items-center justify-center text-sm text-muted-foreground">Laddar karta...</div>
 });

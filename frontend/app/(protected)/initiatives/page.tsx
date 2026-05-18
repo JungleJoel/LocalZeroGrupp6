@@ -7,7 +7,7 @@ import { MapPin, Calendar, Coins, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
-const StaticMiniMap = dynamic(() => import("./staticminimap"), {
+const StaticMiniMap = dynamic(() => import("@/components/ui/staticminimap"), {
   ssr: false,
   loading: () => <div className="h-32 w-full bg-muted animate-pulse rounded-md" />
 });
