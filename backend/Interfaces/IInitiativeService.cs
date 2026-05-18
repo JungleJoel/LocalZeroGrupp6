@@ -22,4 +22,6 @@ public interface IInitiativeService
     Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId);
 
     Task LeaveInitiativeAsync(Guid initiativeId, Guid userId);
+
+    Task<List<UserDTO>> GetParticipantsAsync(Guid initiativeId, Guid userId);
 }

@@ -133,6 +133,24 @@ public class InitiativeService : IInitiativeService
         await _database.SaveChangesAsync();
     }
 
+    public async Task<List<UserDTO>> GetParticipantsAsync(Guid initiativeId, Guid userId)
+{
+    var initiative = await _database.Initiatives
+        .FirstOrDefaultAsync(i => i.Id == initiativeId);
+
+    if (initiative == null)
+        throw new NotFoundException("Initiative not found");
+
+    
+    var participants = await _database.InitiativeParticipators 
+        .Where(p => p.InitiativeId == initiativeId)
+        .Select(p => p.User)
+        .ToListAsync();
+
+    return participants.Adapt<List<UserDTO>>();
+}
+
+
     public async Task FinalizeInitiativeAsync(Guid initiativeId) //H�r ska po�ng ges till deltagare
     {
         var initiative = await _database.Initiatives

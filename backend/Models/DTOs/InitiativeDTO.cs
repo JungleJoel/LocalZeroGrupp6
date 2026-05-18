@@ -16,5 +16,6 @@ public record InitiativeDTO(
     DateTime? EstimatedEndsAt,
     DateTime? EndedAt,
     DateTime CreatedAt,
-    int EcoPointsPerParticipant
+    int EcoPointsPerParticipant,
+    int ParticipantCount
 );

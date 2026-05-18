@@ -60,6 +60,14 @@ public class InitiativeController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id}/participants")]
+    public async Task<ActionResult<List<UserDTO>>> GetParticipants(Guid id)
+    {
+        var userId = GetUserId();
+        var participants = await _initiativeService.GetParticipantsAsync(id, userId);
+        return Ok(participants);
+    }
+
     [HttpPost("{id}/end")]
     public async Task<ActionResult> End(Guid id)
     {
