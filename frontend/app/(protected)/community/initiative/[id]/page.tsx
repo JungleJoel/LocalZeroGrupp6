@@ -153,7 +153,7 @@ export default function InitiativePage() {
           )}
 
           <Button style={{ marginLeft: "auto" }}>
-            {status === "active" ? (
+            {status !== "ended" ? (
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${initiative.latitude},${initiative.longitude}`}
                 target="_blank"
