@@ -30,8 +30,8 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { label: "Home", href: "/home", icon: Home },
   { label: "Community", href: "/community", icon: HeartHandshake },
-  { label: "Create Initiative", href: "/createInitiatives", icon: PlusCircle },
-  { label: "Initiatives", href: "/initiatives", icon: Leaf },
+  /*{ label: "Create Initiative", href: "/createInitiatives", icon: PlusCircle },
+  { label: "Initiatives", href: "/initiatives", icon: Leaf },*/
   { label: "Eco Actions", href: "/ecoactions", icon: Bike },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Settings", href: "/account/settings", icon: Settings },
