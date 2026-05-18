@@ -27,11 +27,10 @@ export default function InitiativeCard({ item }: InitiativeCardProps) {
         });
         if (response.ok) {
           const participants = await response.json();
-          console.log("Detta kommer tillbaka från API/Initiative/id/blablabla:", participants);
           setUserCount(participants.length);
         }
       } catch (error) {
-        console.error(`Kunde inte hämta deltagare för initiativ ${item.id}:`, error);
+        console.error(`could not fetch participants for Initiative ${item.id}:`, error);
       }
     }
 

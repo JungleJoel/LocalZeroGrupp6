@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import { InitiativeDTO } from "@/types/initiativeDTO";
 import { toast } from "sonner";
-import { Calendar, Leaf, ArrowRight, Plus } from "lucide-react";
+import { Calendar, Leaf, ArrowRight, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +14,34 @@ interface CommunityInitiativesProps {
 
 function getStatus(initiative: InitiativeDTO): "active" | "upcoming" {
   return new Date(initiative.startsAt) <= new Date() ? "active" : "upcoming";
+}
+
+function ParticipantCount({ initiativeId }: { initiativeId: string }) {
+  const [count, setCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/Initiative/${initiativeId}/participants`, {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCount(data.length);
+        }
+      } catch (error) {
+        console.error("could not fetch participants:", error);
+      }
+    }
+    if (initiativeId) fetchCount();
+  }, [initiativeId]);
+
+  return (
+    <div className="flex items-center gap-1">
+      <Users className="h-3.5 w-3.5 text-emerald-500" />
+      <span>{count} {count === 1 ? "user" : "users"}</span>
+    </div>
+  );
 }
 
 export function CommunityInitiatives({ communityId }: CommunityInitiativesProps) {
@@ -104,6 +132,7 @@ export function CommunityInitiatives({ communityId }: CommunityInitiativesProps)
                       })}
                     </span>
                   </div>
+                  <ParticipantCount initiativeId={initiative.id} />
                   <div className="flex items-center gap-1 font-medium text-primary">
                     <Leaf className="h-3.5 w-3.5" />
                     <span>{initiative.ecoPointsPerParticipant} pts</span>
