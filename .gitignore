@@ -769,3 +769,4 @@ backend/Models/Entities/*
 package-lock.json
 
 ../.idea/
+backend/backend.csproj.lscache
