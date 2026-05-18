@@ -5,6 +5,7 @@ using backend.Models;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
 using backend.Models.Entities;
+using backend.Settings;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,10 @@ public class EcoPointService : IEcoPointService
     
     public async Task<EcoPointTransactionDTO> AwardEcoPointsUserAsync(EcoPointRequestDTO ecoPointRequestDTO)
     {
+        if (ecoPointRequestDTO.InitiativeId == null &&
+            ecoPointRequestDTO.Amount > EcoPointsConfig.Instance().MaxEcoPointsPerAction)
+            throw new ArgumentException($"Eco points per action cannot exceed {EcoPointsConfig.Instance().MaxEcoPointsPerAction}.");
+
         return await CreateEcoPointTransactionAsync(ecoPointRequestDTO, ecoPointRequestDTO.Amount);
     }
     
@@ -173,6 +178,9 @@ public class EcoPointService : IEcoPointService
         
         if(dto.Amount <= 0)
             throw new ArgumentException("Amount must be greater than zero");
+
+        if (dto.Amount > EcoPointsConfig.Instance().MaxEcoPointsPerParticipant)
+            throw new ArgumentException($"A single transaction cannot exceed {EcoPointsConfig.Instance().MaxEcoPointsPerParticipant} eco points.");
         
         var ecoPointTransaction = new EcoPointTransaction
         {

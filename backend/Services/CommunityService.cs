@@ -116,28 +116,13 @@ public class CommunityService : ICommunityService, ICommunityValidationService
         )).ToList();
     }
 
+    // Calls template method GetValidatedJoinRequestAsync
     public async Task<CommunityJoinRequestDTO> ApproveRequestAsync(Guid requestId, Guid managerUserId, Guid communityId)
     {
-        
-        bool isManager = await IsManagerAsync(managerUserId, communityId);
+        var request = await GetValidatedJoinRequestAsync(requestId, managerUserId, communityId);
 
-        if (!isManager)
-        {
-            throw new ConflictException("Not a manager over this community");
-        }
-        
-        var request = await _database.CommunityJoinRequests
-            .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
-        
-        if(request == null)
-            throw new NotFoundException("Request not found");
-        
-        if(request.IsAccepted != null)
-            throw new ConflictException("Request has already been reviewed");
-        
         var alreadyMember = await IsResidentInCommunityAsync(request.CommunityId, request.UserId);
-                
-        if(alreadyMember)
+        if (alreadyMember)
             throw new ConflictException("User is already a member in community");
         
         await using var transaction = await _database.Database.BeginTransactionAsync();
@@ -161,34 +146,37 @@ public class CommunityService : ICommunityService, ICommunityValidationService
         return request.Adapt<CommunityJoinRequestDTO>();
     }
 
+    // Calls template method GetValidatedJoinRequestAsync
     public async Task<CommunityJoinRequestDTO> DeclineRequestAsync(Guid requestId, Guid managerUserId, Guid communityId)
     {
-        
-        bool isManager = await IsManagerAsync(managerUserId, communityId);
+        var request = await GetValidatedJoinRequestAsync(requestId, managerUserId, communityId);
 
-        if (!isManager)
-        {
-            throw new ConflictException("Not a manager over this community");
-        }
-        
-        var request = await _database.CommunityJoinRequests
-            .FirstOrDefaultAsync(request => request.Id == requestId && request.CommunityId == communityId);
-
-        if(request == null)
-            throw new NotFoundException("Request not found");
-        
-        if(request.IsAccepted != null)
-            throw new ConflictException("Request has already been reviewed");
-        
         request.IsAccepted = false;
         request.ReviewedBy = managerUserId;
-        
         _database.CommunityJoinRequests.Update(request);
         await _database.SaveChangesAsync();
-        
+
         return request.Adapt<CommunityJoinRequestDTO>();
     }
-    
+
+    // This is a template method.
+    private async Task<CommunityJoinRequest> GetValidatedJoinRequestAsync(Guid requestId, Guid managerUserId, Guid communityId)
+    {
+        if (!await IsManagerAsync(managerUserId, communityId))
+            throw new ConflictException("Not a manager over this community");
+
+        var request = await _database.CommunityJoinRequests
+            .FirstOrDefaultAsync(r => r.Id == requestId && r.CommunityId == communityId);
+
+        if (request is null)
+            throw new NotFoundException("Request not found");
+
+        if (request.IsAccepted != null)
+            throw new ConflictException("Request has already been reviewed");
+
+        return request;
+    }
+
     public async Task LeaveCommunityAsync(Guid userId, Guid communityId)
     {
         await using var transaction = await _database.Database.BeginTransactionAsync();

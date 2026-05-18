@@ -72,13 +72,11 @@ export function CommunityInitiatives({ communityId }: CommunityInitiativesProps)
   return (
     <div className="mt-8">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Available initiatives</h2>
-        <Link
-          href="/createInitiatives"
-        >
-          <Button className="h-7"><Plus className="h-4 w-4" /> Create initiative</Button> 
-        </Link>
-      </div>
+  <h2 className="text-xl font-semibold">Available initiatives</h2>
+  <Link href={`/createInitiatives?communityId=${communityId}`}>
+    <Button className="h-7"><Plus className="h-4 w-4" /> Create initiative</Button> 
+  </Link>
+</div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

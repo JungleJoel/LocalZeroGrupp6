@@ -2,6 +2,7 @@ using backend.Data;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
 using backend.Models.Entities;
+using backend.Settings;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using backend.Exceptions;
@@ -30,6 +31,9 @@ public class InitiativeService : IInitiativeService
     {
         if (request.EcoPointsPerParticipant <= 0)
             throw new ArgumentException("Eco points per participant must be greater than zero.");
+
+        if (request.EcoPointsPerParticipant > EcoPointsConfig.Instance().MaxEcoPointsPerParticipant)
+            throw new ArgumentException($"Eco points per participant cannot exceed {EcoPointsConfig.Instance().MaxEcoPointsPerParticipant}.");
 
         if (request.EstimatedEndsAt < DateTime.UtcNow)
             throw new ArgumentException("Estimated end date must be in the future.");

@@ -39,6 +39,7 @@ export default function InitiativePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoined, setIsJoined] = useState(false);
   const [isJoinLoading, setIsJoinLoading] = useState(false);
+  const [locationName, setLocationName] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchInitiative() {
@@ -62,6 +63,25 @@ export default function InitiativePage() {
     fetchInitiative();
   }, [id]);
 
+   useEffect(() => {
+  if (!initiative) return;
+  async function fetchLocationName() {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${initiative!.latitude}&lon=${initiative!.longitude}&format=json`,
+        { headers: { "Accept-Language": "sv" } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        console.log("shit i recieve",data);
+        setLocationName([data.address.road, data.address.city].filter(Boolean).join(", ") ?? null);
+      }
+    } catch {}
+  }
+  fetchLocationName();
+}, [initiative]);
+
+
   if (isLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
@@ -77,6 +97,8 @@ export default function InitiativePage() {
       </div>
     );
   }
+
+ 
   
   async function handleJoinLeave() {
     setIsJoinLoading(true);
@@ -240,8 +262,7 @@ export default function InitiativePage() {
                 <div>
                   <p className="text-xs text-muted-foreground">Location</p>
                   <p className="font-medium">
-                    {initiative.latitude.toFixed(4)},{" "}
-                    {initiative.longitude.toFixed(4)}
+                    {locationName ?? `${initiative.latitude.toFixed(4)}, ${initiative.longitude.toFixed(4)}`}
                   </p>
                 </div>
               </div>

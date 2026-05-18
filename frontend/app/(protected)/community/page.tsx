@@ -1,5 +1,5 @@
 "use client";
-
+/*COMMUNITY PAGE*/
 import { GetMyCommunityResponseDTO } from "@/types/getMyCommunityResponseDTO";
 import { MyJoinRequestDTO } from "@/types/myJoinRequestDTO";
 import { useEffect, useState } from "react";
