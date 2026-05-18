@@ -3,6 +3,7 @@ using backend.Exceptions;
 using backend.Interfaces;
 using backend.Models;
 using backend.Models.DTOs.Requests;
+using backend.Services.EcoPoint;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,13 @@ namespace backend.Controllers;
 [Route("[controller]")]
 public class EcoActionsController : ControllerBase
 {
+    private readonly EcoPointCommandInvoker _invoker;
     private readonly IEcoPointService _ecoPointService;
 
-    public EcoActionsController(IEcoPointService ecoPointService)
+    public EcoActionsController(EcoPointCommandInvoker ecoPointCommandInvoker, IEcoPointService ecoPointService)
     {
         _ecoPointService = ecoPointService;
+        _invoker = ecoPointCommandInvoker;
     }
 
     private Guid GetUserId() =>
@@ -31,13 +34,15 @@ public class EcoActionsController : ControllerBase
             throw new ForbiddenException("You can only log eco-actions for yourself");
         }
 
-        return await _ecoPointService.AwardEcoPointsUserAsync(new EcoPointRequestDTO(
+        EcoPointRequestDTO request = new EcoPointRequestDTO(
             CommunityId: communityId,
             UserId: userId,
             InitiativeId: null,
             Amount: ecoPointPayloadDto.Amount,
             Reason: ecoPointPayloadDto.Reason
-        ));
+        );
+
+        return await _invoker.InvokeAsync(new AwardEcoPointsCommand(request));
     }
 
     [HttpGet("community/{communityId}/user/{userId}/eco-actions")]

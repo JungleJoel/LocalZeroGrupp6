@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using backend.Services.EcoPoint;
 
 Env.Load();
 
@@ -64,6 +65,7 @@ builder.Services.AddScoped<ICommunityValidationService>(sp => (CommunityService)
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IEcoPointService, EcoPointService>();
 builder.Services.AddScoped<IEcoPointTransactions>(sp => sp.GetRequiredService<IEcoPointService>());
+builder.Services.AddScoped<EcoPointCommandInvoker>();
 builder.Services.AddScoped<IInitiativeService, InitiativeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IDirectMessageService, DirectMessageService>();
