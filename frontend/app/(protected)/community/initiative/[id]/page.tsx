@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 import { InitiativeDTO } from "@/types/initiativeDTO";
+import {
+  InitiativeCommentDTO,
+  createInitiativeComment,
+  getInitiativeComments,
+} from "@/lib/comments";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -14,8 +19,11 @@ import {
   Lock,
   Globe,
   Loader2,
+  MessageCircle,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 function getStatus(initiative: InitiativeDTO): "active" | "upcoming" | "ended" {
@@ -40,6 +48,10 @@ export default function InitiativePage() {
   const [isJoined, setIsJoined] = useState(false);
   const [isJoinLoading, setIsJoinLoading] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
+  const [comments, setComments] = useState<InitiativeCommentDTO[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [isCommentsLoading, setIsCommentsLoading] = useState(true);
+  const [isCommentPosting, setIsCommentPosting] = useState(false);
 
   useEffect(() => {
     async function fetchInitiative() {
@@ -61,6 +73,21 @@ export default function InitiativePage() {
       }
     }
     fetchInitiative();
+  }, [id]);
+
+  useEffect(() => {
+    async function fetchComments() {
+      try {
+        const data = await getInitiativeComments(id);
+        setComments(data);
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsCommentsLoading(false);
+      }
+    }
+
+    fetchComments();
   }, [id]);
 
    useEffect(() => {
@@ -117,6 +144,23 @@ export default function InitiativePage() {
       toast.error(error.message);
     } finally {
       setIsJoinLoading(false);
+    }
+  }
+
+  async function handlePostComment() {
+    const trimmedBody = commentBody.trim();
+    if (!trimmedBody) return;
+
+    setIsCommentPosting(true);
+    try {
+      const comment = await createInitiativeComment(id, trimmedBody);
+      setComments((current) => [...current, comment]);
+      setCommentBody("");
+      toast.success("Comment posted");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsCommentPosting(false);
     }
   }
 
@@ -296,6 +340,69 @@ export default function InitiativePage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-medium text-muted-foreground">
+              Comments
+            </h2>
+          </div>
+
+          <div className="mb-5 flex flex-col gap-2">
+            <Textarea
+              placeholder="Write a comment..."
+              value={commentBody}
+              onChange={(event) => setCommentBody(event.target.value)}
+              disabled={isCommentPosting}
+              className="min-h-20"
+            />
+            <div className="flex justify-end">
+              <Button
+                onClick={handlePostComment}
+                disabled={isCommentPosting || !commentBody.trim()}
+                className="gap-2"
+              >
+                {isCommentPosting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                Post
+              </Button>
+            </div>
+          </div>
+
+          {isCommentsLoading ? (
+            <p className="text-sm text-muted-foreground">Loading comments...</p>
+          ) : comments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No comments yet. Start the conversation.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="border-t pt-4 first:border-t-0 first:pt-0">
+                  <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="text-sm font-medium">{comment.authorName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(comment.createdAt).toLocaleString("en-SE", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                    {comment.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
