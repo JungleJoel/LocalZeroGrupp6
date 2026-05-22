@@ -93,10 +93,7 @@ public class InitiativeService : IInitiativeService
 
         if (initiative == null)
             throw new NotFoundException("Initiative not found");
-
-        if (initiative.CreatedBy != userId)
-            throw new ConflictException("Not allowed");
-
+        
         _database.Initiatives.Remove(initiative);
 
         await _database.SaveChangesAsync();

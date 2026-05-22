@@ -85,15 +85,6 @@ public class CommunityController : ControllerBase
         return  await _communityService.DeclineRequestAsync(requestId, managerUserId, communityId);
     }
 
-    [Authorize(Roles = "CommunityManager")]
-    [HttpPost("{communityId}/share-initiative/{initiativeId}")]
-    public async Task<ActionResult> ShareInitiative(Guid communityId, Guid initiativeId)
-    {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        await _communityService.ShareInitiativeAsync(userId, communityId, initiativeId);
-        return Ok();
-    }
-
 
     [HttpPost("{communityId}/leave")]
     public async Task<ActionResult> LeaveCommunities(Guid communityId)

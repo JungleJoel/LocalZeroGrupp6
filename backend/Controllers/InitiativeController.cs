@@ -52,6 +52,7 @@ public class InitiativeController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [Authorize(Roles = "CommunityManager")]
     [HttpDelete("{id}/cancel")]
     public async Task<ActionResult> Cancel(Guid id)
     {
