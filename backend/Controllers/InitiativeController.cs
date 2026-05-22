@@ -52,11 +52,11 @@ public class InitiativeController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpDelete("{id}/cancel")]
-    public async Task<ActionResult> Cancel(Guid id)
+    [HttpDelete("{id}/remove")]
+    public async Task<ActionResult> Remove(Guid id)
     {
         var userId = GetUserId();
-        await _initiativeService.CancelInitiativeAsync(id, userId);
+        await _initiativeService.RemoveInitiativeAsync(id, userId);
         return NoContent();
     }
 

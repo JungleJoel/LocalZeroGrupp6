@@ -6,30 +6,23 @@ namespace backend.Services;
 
 public class InitiativeCleanupService : BackgroundService
 {
-    private readonly ApplicationDbContext _database;
-    private readonly IInitiativeService _initiativeService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<InitiativeCleanupService> _logger;
 
-    public InitiativeCleanupService(ApplicationDbContext database, IInitiativeService initiativeService, ILogger<InitiativeCleanupService> logger)
+    public InitiativeCleanupService(IServiceScopeFactory scopeFactory, ILogger<InitiativeCleanupService> logger)
     {
-        _database = database;
-        _initiativeService = initiativeService;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using PeriodicTimer timer = new(TimeSpan.FromMinutes(1));
-
         _logger.LogInformation("Initiative Cleanup Service has started.");
-
         try
         {
-            
             while (await timer.WaitForNextTickAsync(stoppingToken))
-            {
                 await RunCleanupAsync();
-            }
         }
         catch (OperationCanceledException)
         {
@@ -39,9 +32,12 @@ public class InitiativeCleanupService : BackgroundService
 
     private async Task RunCleanupAsync()
     {
-        var now = DateTime.UtcNow;
+        using var scope = _scopeFactory.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var initiativeService = scope.ServiceProvider.GetRequiredService<IInitiativeService>();
 
-        var expiredInitiativeIds = await _database.Initiatives
+        var now = DateTime.UtcNow;
+        var expiredInitiativeIds = await database.Initiatives
             .Where(i => i.EndedAt == null && i.EstimatedEndsAt < now)
             .Select(i => i.Id)
             .ToListAsync();
@@ -49,13 +45,11 @@ public class InitiativeCleanupService : BackgroundService
         if (expiredInitiativeIds.Any())
         {
             _logger.LogInformation("Found {Count} initiatives to end.", expiredInitiativeIds.Count);
-
             foreach (var id in expiredInitiativeIds)
             {
                 try
                 {
-                   
-                    await _initiativeService.FinalizeInitiativeAsync(id);
+                    await initiativeService.FinalizeInitiativeAsync(id);
                 }
                 catch (Exception ex)
                 {

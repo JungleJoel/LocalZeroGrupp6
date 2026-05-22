@@ -86,9 +86,10 @@ public class InitiativeService : IInitiativeService
         return result.Initiative.Adapt<InitiativeDTO>() with { IsParticipating = result.IsParticipating };
     }
 
-    public async Task CancelInitiativeAsync(Guid inititativeId, Guid userId)
+    public async Task RemoveInitiativeAsync(Guid inititativeId, Guid userId)
     {
         var initiative = await _database.Initiatives
+            .Include(i => i.InitiativeParticipators)
             .FirstOrDefaultAsync(i => i.Id == inititativeId);
 
         if (initiative == null)
@@ -96,6 +97,11 @@ public class InitiativeService : IInitiativeService
 
         if (initiative.CreatedBy != userId)
             throw new ConflictException("Not allowed");
+
+        foreach (var participator in initiative.InitiativeParticipators)
+        {
+            await LeaveInitiativeAsync(inititativeId, participator.UserId);
+        }
 
         _database.Initiatives.Remove(initiative);
 
@@ -119,10 +125,10 @@ public class InitiativeService : IInitiativeService
             .ToList();
     }
 
-    public async Task EndInitiativeAsync(Guid id, Guid userId)
+    public async Task EndInitiativeAsync(Guid initiativeId, Guid userId)
     {
         var initiative = await _database.Initiatives
-            .FirstOrDefaultAsync(i => i.Id == id);
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
 
         if (initiative == null)
             throw new NotFoundException("Initiative not found");
@@ -133,9 +139,7 @@ public class InitiativeService : IInitiativeService
         if (initiative.EndedAt != null)
             throw new ConflictException("Already ended");
 
-        initiative.EndedAt = DateTime.UtcNow;
-
-        await _database.SaveChangesAsync();
+        await FinalizeInitiativeAsync(initiativeId);
     }
 
     public async Task<List<UserDTO>> GetParticipantsAsync(Guid initiativeId, Guid userId)
@@ -181,12 +185,13 @@ public class InitiativeService : IInitiativeService
         }
 
         initiative.EndedAt = DateTime.UtcNow;
+        await _database.SaveChangesAsync();
 
-        List<UserDTO> users = await GetUsersFromInitiativeAsync(initiative);
+        var participants = await GetParticipantDataAsync(initiative);
 
-        InitiativeEcoPointRequestDTO ecoPointRequest = new InitiativeEcoPointRequestDTO(
+        InitiativeEcoPointRequestDTO ecoPointRequest = new(
             initiativeId,
-            users,
+            participants,
             initiative.EcoPointsPerParticipant
         );
 
@@ -234,21 +239,14 @@ public class InitiativeService : IInitiativeService
         await _database.SaveChangesAsync();
     }
 
-    private async Task<List<UserDTO>> GetUsersFromInitiativeAsync(Initiative initiative)
+    private async Task<Dictionary<Guid, Guid>> GetParticipantDataAsync(Initiative initiative)
     {
-        List<UserDTO> users = new List<UserDTO>();
+        var participantIds = initiative.InitiativeParticipators
+            .Select(p => p.UserId)
+            .ToList();
 
-        foreach (var participant in initiative.InitiativeParticipators)
-        {
-            var user = await _database.FindAsync<User>(participant.UserId);
-            if (user != null)
-            {
-                var userDto = user.Adapt<UserDTO>();
-                users.Add(userDto);
-
-            }
-        }
-
-        return users;
+        return await _database.CommunityResidents
+            .Where(cr => participantIds.Contains(cr.UserId))
+            .ToDictionaryAsync(cr => cr.UserId, cr => cr.CommunityId);
     }
 }
