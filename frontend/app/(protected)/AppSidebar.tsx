@@ -35,6 +35,7 @@ const navItems = [
   { label: "Eco Actions", href: "/ecoactions", icon: Bike },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Settings", href: "/account/settings", icon: Settings },
+  { label: "Leaderboards", href: "/leaderboards", icon: Settings },
 ];
 
 export function AppSidebar({user}:{user: UserDTO}) {
