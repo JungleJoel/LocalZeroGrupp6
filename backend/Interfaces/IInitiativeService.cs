@@ -11,7 +11,7 @@ public interface IInitiativeService
 
     Task<InitiativeDTO> GetInitiativeAsync(Guid initiativeId, Guid userId);
 
-    Task CancelInitiativeAsync(Guid initiativeId, Guid userId);
+    Task RemoveInitiativeAsync(Guid initiativeId, Guid userId);
 
     Task EndInitiativeAsync(Guid initiativeId, Guid userId);
 

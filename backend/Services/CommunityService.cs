@@ -41,7 +41,7 @@ public class CommunityService : ICommunityService, ICommunityValidationService
 
         if (community == null)
         {
-            throw new KeyNotFoundException($"Community with id {id} not found");
+            throw new NotFoundException($"Community with id {id} not found");
         }
         
         return community.Adapt<CommunityDTO>();

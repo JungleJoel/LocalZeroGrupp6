@@ -1,8 +1,6 @@
-using System.Security.Claims;
 using backend.Interfaces;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
-using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +9,7 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class InitiativeController : ControllerBase
+public class InitiativeController : BaseController
 {
     private readonly IInitiativeService _initiativeService;
 
@@ -52,11 +50,11 @@ public class InitiativeController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpDelete("{id}/cancel")]
-    public async Task<ActionResult> Cancel(Guid id)
+    [HttpDelete("{id}/remove")]
+    public async Task<ActionResult> Remove(Guid id)
     {
         var userId = GetUserId();
-        await _initiativeService.CancelInitiativeAsync(id, userId);
+        await _initiativeService.RemoveInitiativeAsync(id, userId);
         return NoContent();
     }
 
@@ -101,15 +99,5 @@ public class InitiativeController : ControllerBase
     {
         await _initiativeService.UnlikeInitiativeAsync(initiativeId, GetUserId());
         return NoContent();
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim))
-        {
-            throw new UnauthorizedAccessException("User ID not found in token");
-        }
-        return Guid.Parse(userIdClaim);
     }
 }

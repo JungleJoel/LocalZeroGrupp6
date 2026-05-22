@@ -94,13 +94,7 @@ public class EcoPointService : IEcoPointService
         
         return ecoPointHistory.Adapt<List<EcoPointTransactionDTO>>();
     }
-
-    //FINNS ATT IMPLEMENTERA OM MAN KÄNNER ATT MAN HAR VÄLDIGT TRÅKIGT EN REGNIG SÖNDAG
-    public async Task GetCommunityLeaderboardAsync(Guid communityId, Guid userId)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public async Task<List<EcoPointTransactionDTO>> GetEcoActionHistoryAsync(Guid communityId, Guid userId)
     {
         if (!await _communityValidationService.IsResidentInCommunityAsync(communityId, userId))
@@ -152,16 +146,15 @@ public class EcoPointService : IEcoPointService
     {
         var ecoPointTransactions = new List<EcoPointTransactionDTO>();
 
-        foreach (var user in initiativeEcoPointRequestDTO.Users)
+        foreach (var (userId, communityId) in initiativeEcoPointRequestDTO.Participants)
         {
             var ecoPointRequest = new EcoPointRequestDTO(
-                user.Community!.Id,
-                user.Id,
+                communityId,
+                userId,
                 initiativeEcoPointRequestDTO.InitiativeId,
                 initiativeEcoPointRequestDTO.EcoPointAmount,
                 Reason: null
             );
-            
             var ecoPointTransaction = await AwardEcoPointsUserAsync(ecoPointRequest);
             ecoPointTransactions.Add(ecoPointTransaction);
         }

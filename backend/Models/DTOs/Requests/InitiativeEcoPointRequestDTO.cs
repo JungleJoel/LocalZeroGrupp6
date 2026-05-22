@@ -1,8 +1,7 @@
 namespace backend.Models.DTOs.Requests;
 
-public record InitiativeEcoPointRequestDTO
-(
+public record InitiativeEcoPointRequestDTO(
     Guid InitiativeId,
-    List<UserDTO> Users,
+    Dictionary<Guid, Guid> Participants,
     int EcoPointAmount
 );
