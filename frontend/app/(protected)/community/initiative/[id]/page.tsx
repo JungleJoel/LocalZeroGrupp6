@@ -406,6 +406,58 @@ async function handleCancel() {
                   </div>
                 </div>
               )}
+              {isManager && status !== "ended" && (
+          <div className="mt-6 flex gap-3">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
+                  <Ban className="h-4 w-4" />
+                  Cancel initiative
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel initiative?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently cancel the initiative. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Back</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={handleCancel}
+                  >
+                    Cancel initiative
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button>
+                  <CalendarCheck className="h-4 w-4" />
+                  End initiative
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>End initiative?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will finalize the initiative and distribute eco points to all participants.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Back</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleEnd}>
+                    End initiative
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
             </div>
           </div>
 
@@ -459,58 +511,7 @@ async function handleCancel() {
           </div>
   </div>
 
-        {isManager && status !== "ended" && (
-          <div className="mt-6 flex gap-3">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
-                  <Ban className="h-4 w-4" />
-                  Cancel initiative
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel initiative?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently cancel the initiative. This cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Back</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={handleCancel}
-                  >
-                    Cancel initiative
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button>
-                  <CalendarCheck className="h-4 w-4" />
-                  End initiative
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>End initiative?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will finalize the initiative and distribute eco points to all participants.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Back</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleEnd}>
-                    End initiative
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        )}
+        
 
         <div className="mt-4 rounded-xl border bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
