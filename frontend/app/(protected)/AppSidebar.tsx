@@ -19,6 +19,7 @@ import {
   Home,
   HeartHandshake,
   Leaf,
+  Trophy,
   ListTree,
   MessageSquare,
   PlusCircle,
@@ -31,11 +32,12 @@ const navItems = [
   { label: "Home", href: "/home", icon: Home },
   { label: "Community", href: "/community", icon: HeartHandshake },
   /*{ label: "Create Initiative", href: "/createInitiatives", icon: PlusCircle },
-  { label: "Initiatives", href: "/initiatives", icon: Leaf },*/
+  { label: "Initiatives", href: "/initiatives", icon:  },*/
   { label: "Eco Actions", href: "/ecoactions", icon: Bike },
+  { label: "Leaderboards", href: "/leaderboards", icon: Trophy },
   { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Settings", href: "/account/settings", icon: Settings },
-  { label: "Leaderboards", href: "/leaderboards", icon: Settings },
+  
 ];
 
 export function AppSidebar({user}:{user: UserDTO}) {

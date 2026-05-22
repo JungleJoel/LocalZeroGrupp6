@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 import { InitiativeDTO } from "@/types/initiativeDTO";
 import { toast } from "sonner";
@@ -46,6 +46,8 @@ function formatDate(dateStr: string | null) {
 }
 
 export default function InitiativePage() {
+  const searchParams = useSearchParams();
+  const isManager = searchParams.get("isManager") === "true";
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [initiative, setInitiative] = useState<InitiativeDTO | null>(null);
@@ -132,6 +134,34 @@ export default function InitiativePage() {
       setIsJoinLoading(false);
     }
   }
+
+  async function handleCancel() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Initiative/${id}/cancel`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Could not cancel initiative");
+    toast.success("Initiative cancelled");
+    router.back();
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+}
+
+async function handleEnd() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Initiative/${id}/end`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Could not end initiative");
+    toast.success("Initiative ended");
+    router.back();
+  } catch (error: any) {
+    toast.error(error.message);
+  }
+}
 
   const status = getStatus(initiative);
 
@@ -306,10 +336,62 @@ export default function InitiativePage() {
                     {initiative.ecoPointsPerParticipant} pts
                   </p>
                 </div>
+
               </div>
             </div>
           </div>
-        </div>
+        </div>{isManager && status !== "ended" && (
+  <div className="mt-6 flex gap-3">
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10">
+          <Ban className="h-4 w-4" />
+          Cancel initiative
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancel initiative?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently cancel the initiative. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Back</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleCancel}
+          >
+            Cancel initiative
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button>
+          <CalendarCheck className="h-4 w-4" />
+          End initiative
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>End initiative?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will finalize the initiative and distribute eco points to all participants.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Back</AlertDialogCancel>
+          <AlertDialogAction onClick={handleEnd}>
+            End initiative
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </div>
+)}
       </div>
     </div>
   );

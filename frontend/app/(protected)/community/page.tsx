@@ -235,7 +235,7 @@ export default function Community() {
         </div>
 
         <EcoPointsCard community={apiResponse.community} />
-        <CommunityInitiatives communityId={apiResponse.community.id} />
+        <CommunityInitiatives communityId={apiResponse.community.id} isManager={apiResponse.isCommunityManager} />
 
         {apiResponse.isCommunityManager && (
           <CommunityJoinRequests communityId={apiResponse.community.id} />

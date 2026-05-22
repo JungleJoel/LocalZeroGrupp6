@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 
 interface CommunityInitiativesProps {
   communityId: string;
+  isManager: boolean;
 }
+
+
 
 function getStatus(initiative: InitiativeDTO): "active" | "upcoming" {
   return new Date(initiative.startsAt) <= new Date() ? "active" : "upcoming";
@@ -44,7 +47,7 @@ function ParticipantCount({ initiativeId }: { initiativeId: string }) {
   );
 }
 
-export function CommunityInitiatives({ communityId }: CommunityInitiativesProps) {
+export function CommunityInitiatives({ communityId, isManager }: CommunityInitiativesProps) {
   const [initiatives, setInitiatives] = useState<InitiativeDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -99,7 +102,7 @@ export function CommunityInitiatives({ communityId }: CommunityInitiativesProps)
             return (
               <Link
                 key={initiative.id}
-                href={`/community/initiative/${initiative.id}`}
+                href={`/community/initiative/${initiative.id}?isManager=${isManager}`}
                 className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start justify-between gap-2">
