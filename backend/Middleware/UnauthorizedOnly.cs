@@ -1,7 +1,7 @@
 ﻿using backend.Exceptions;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace in_pos_server_csharp.Attributes
+namespace backend.Middleware
 {
     public class UnauthorizedOnly : ActionFilterAttribute
     {

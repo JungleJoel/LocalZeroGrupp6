@@ -9,7 +9,7 @@ namespace backend.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize]
-    public class AccountController : ControllerBase
+    public class AccountController : BaseController
     {
         private readonly IAccountService _accountService;
 
@@ -17,9 +17,6 @@ namespace backend.Controllers
         {
             _accountService = accountService;
         }
-
-        private Guid GetUserId() =>
-            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpGet("me")]
         public async Task<ActionResult<AccountProfileDto>> GetProfile()

@@ -12,7 +12,7 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class EcoActionsController : ControllerBase
+public class EcoActionsController : BaseController
 {
     private readonly EcoPointCommandInvoker _invoker;
     private readonly IEcoPointService _ecoPointService;
@@ -22,10 +22,7 @@ public class EcoActionsController : ControllerBase
         _ecoPointService = ecoPointService;
         _invoker = ecoPointCommandInvoker;
     }
-
-    private Guid GetUserId() =>
-        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
+    
     [HttpPost("community/{communityId}/user/{userId}/eco-actions")]
     public async Task<EcoPointTransactionDTO> AddEcoAction(Guid communityId, Guid userId, [FromBody] EcoPointPayloadDTO ecoPointPayloadDto)
     {

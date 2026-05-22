@@ -1,8 +1,6 @@
-using System.Security.Claims;
 using backend.Interfaces;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
-using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +9,7 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class InitiativeController : ControllerBase
+public class InitiativeController : BaseController
 {
     private readonly IInitiativeService _initiativeService;
 
@@ -87,15 +85,5 @@ public class InitiativeController : ControllerBase
     {
         await _initiativeService.LeaveInitiativeAsync(initiativeId, GetUserId());
         return Ok();
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim))
-        {
-            throw new UnauthorizedAccessException("User ID not found in token");
-        }
-        return Guid.Parse(userIdClaim);
     }
 }
