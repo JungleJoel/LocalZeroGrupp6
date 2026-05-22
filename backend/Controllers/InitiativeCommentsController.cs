@@ -22,7 +22,7 @@ public class InitiativeCommentsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<InitiativeCommentDTO>>> GetComments(Guid initiativeId)
     {
-        var comments = await _commentService.GetCommentsAsync(initiativeId);
+        var comments = await _commentService.GetCommentsAsync(initiativeId, GetUserId());
         return Ok(comments);
     }
 
@@ -34,6 +34,20 @@ public class InitiativeCommentsController : ControllerBase
 
         var comment = await _commentService.CreateCommentAsync(initiativeId, GetUserId(), request);
         return Ok(comment);
+    }
+
+    [HttpPost("{commentId}/like")]
+    public async Task<ActionResult<InitiativeCommentDTO>> LikeComment(Guid initiativeId, Guid commentId)
+    {
+        var comment = await _commentService.LikeCommentAsync(initiativeId, commentId, GetUserId());
+        return Ok(comment);
+    }
+
+    [HttpDelete("{commentId}/like")]
+    public async Task<ActionResult> UnlikeComment(Guid initiativeId, Guid commentId)
+    {
+        await _commentService.UnlikeCommentAsync(initiativeId, commentId, GetUserId());
+        return NoContent();
     }
 
     private Guid GetUserId()

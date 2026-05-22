@@ -6,5 +6,7 @@ public record InitiativeCommentDTO(
     Guid UserId,
     string AuthorName,
     string Body,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int LikeCount,
+    bool IsLiked
 );

@@ -26,4 +26,7 @@ export interface InitiativeDTO {
     endedAt: string | null;
     createdAt: string;
     ecoPointsPerParticipant: number;
+    participantCount: number;
+    likeCount: number;
+    isLiked: boolean;
 }

@@ -8,6 +8,8 @@ import {
   InitiativeCommentDTO,
   createInitiativeComment,
   getInitiativeComments,
+  likeInitiativeComment,
+  unlikeInitiativeComment,
 } from "@/lib/comments";
 import { toast } from "sonner";
 import {
@@ -18,6 +20,7 @@ import {
   MapPin,
   Lock,
   Globe,
+  Heart,
   Loader2,
   MessageCircle,
   Send,
@@ -47,11 +50,13 @@ export default function InitiativePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoined, setIsJoined] = useState(false);
   const [isJoinLoading, setIsJoinLoading] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
   const [comments, setComments] = useState<InitiativeCommentDTO[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [isCommentsLoading, setIsCommentsLoading] = useState(true);
   const [isCommentPosting, setIsCommentPosting] = useState(false);
+  const [likingCommentId, setLikingCommentId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchInitiative() {
@@ -164,6 +169,65 @@ export default function InitiativePage() {
     }
   }
 
+  async function handleLikeInitiative() {
+    if (!initiative) return;
+
+    setIsLikeLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/Initiative/${id}/like`, {
+        method: initiative.isLiked ? "DELETE" : "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error("Could not update like");
+
+      if (initiative.isLiked) {
+        setInitiative({
+          ...initiative,
+          isLiked: false,
+          likeCount: Math.max(0, initiative.likeCount - 1),
+        });
+      } else {
+        setInitiative((await response.json()) as InitiativeDTO);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLikeLoading(false);
+    }
+  }
+
+  async function handleLikeComment(comment: InitiativeCommentDTO) {
+    setLikingCommentId(comment.id);
+    try {
+      if (comment.isLiked) {
+        await unlikeInitiativeComment(id, comment.id);
+        setComments((current) =>
+          current.map((item) =>
+            item.id === comment.id
+              ? {
+                  ...item,
+                  isLiked: false,
+                  likeCount: Math.max(0, item.likeCount - 1),
+                }
+              : item
+          )
+        );
+      } else {
+        const updatedComment = await likeInitiativeComment(id, comment.id);
+        setComments((current) =>
+          current.map((item) =>
+            item.id === comment.id ? updatedComment : item
+          )
+        );
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLikingCommentId(null);
+    }
+  }
+
   const status = getStatus(initiative);
 
   return (
@@ -217,6 +281,23 @@ export default function InitiativePage() {
               )}
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            onClick={handleLikeInitiative}
+            disabled={isLikeLoading}
+            className="gap-2"
+          >
+            {isLikeLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Heart
+                className="h-4 w-4"
+                fill={initiative.isLiked ? "currentColor" : "none"}
+              />
+            )}
+            {initiative.likeCount}
+          </Button>
 
           <Button style={{ marginLeft: "auto" }}>
             {status !== "ended" ? (
@@ -399,6 +480,23 @@ export default function InitiativePage() {
                   <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                     {comment.body}
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleLikeComment(comment)}
+                    disabled={likingCommentId === comment.id}
+                    className="mt-2 gap-1.5 px-2 text-muted-foreground"
+                  >
+                    {likingCommentId === comment.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Heart
+                        className="h-3.5 w-3.5"
+                        fill={comment.isLiked ? "currentColor" : "none"}
+                      />
+                    )}
+                    {comment.likeCount}
+                  </Button>
                 </div>
               ))}
             </div>
