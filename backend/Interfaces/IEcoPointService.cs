@@ -14,8 +14,6 @@ public interface IEcoPointService : IEcoPointTransactions
 
     Task<List<EcoPointTransactionDTO>> GetCommunityEcoPointHistoryAsync(Guid communityId, Guid userId);
     
-    Task GetCommunityLeaderboardAsync(Guid communityId, Guid userId);
-
     Task<List<EcoPointTransactionDTO>> GetEcoActionHistoryAsync(Guid communityId, Guid userId);
 
     Task<CommunityEcoActionSummaryDTO> GetCommunityEcoActionSummaryAsync(Guid communityId, Guid requestingUserId);

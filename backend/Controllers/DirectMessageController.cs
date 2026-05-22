@@ -10,7 +10,7 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class DirectMessageController : ControllerBase
+public class DirectMessageController : BaseController
 {
     private readonly IDirectMessageService _directMessageService;
 
@@ -38,13 +38,5 @@ public class DirectMessageController : ControllerBase
     {
         var message = await _directMessageService.SendMessageAsync(GetUserId(), request);
         return Ok(message);
-    }
-
-    private Guid GetUserId()
-    {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim))
-            throw new UnauthorizedAccessException("User ID not found in token");
-        return Guid.Parse(userIdClaim);
     }
 }

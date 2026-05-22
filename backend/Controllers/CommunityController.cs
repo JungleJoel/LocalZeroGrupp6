@@ -11,7 +11,7 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class CommunityController : ControllerBase
+public class CommunityController : BaseController
 {
     
     private readonly ICommunityService _communityService;
@@ -31,7 +31,7 @@ public class CommunityController : ControllerBase
     [HttpGet("my-community")]
     public async Task<ActionResult<GetMyCommunityResponseDTO>> GetMyCommunity()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = GetUserId();
         var community = await _communityService.GetMyCommunityAsync(userId);
         return Ok(community);
             
@@ -40,14 +40,14 @@ public class CommunityController : ControllerBase
     [HttpPost("{communityId}/join")]
     public async Task<ActionResult<CommunityJoinRequestDTO>> JoinCommunity(Guid communityId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = GetUserId();
         return Ok(await _communityService.SubmitJoinRequestAsync(userId, communityId));
     }
 
     [HttpGet("my-join-request")]
     public async Task<ActionResult<MyJoinRequestDTO>> GetMyJoinRequest()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = GetUserId();
         var request = await _communityService.GetMyJoinRequestAsync(userId);
         if (request == null) return NotFound();
         return Ok(request);
@@ -56,7 +56,7 @@ public class CommunityController : ControllerBase
     [HttpDelete("{communityId}/cancel-request")]
     public async Task<ActionResult> CancelJoinRequest(Guid communityId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = GetUserId();
         await _communityService.CancelJoinRequestAsync(userId, communityId);
         return Ok();
     }
@@ -65,7 +65,7 @@ public class CommunityController : ControllerBase
     [HttpGet("{communityId}/get-requests")]
     public async Task<ActionResult<List<CommunityJoinRequestWithUserDTO>>> GetRequests(Guid communityId)
     {
-        var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var managerUserId = GetUserId();
         return Ok(await _communityService.GetRequestsAsync(managerUserId, communityId));
     }
     
@@ -73,7 +73,7 @@ public class CommunityController : ControllerBase
     [HttpPost("{communityId}/approve-request/{requestId}")]
     public async Task<ActionResult<CommunityJoinRequestDTO>> ApproveRequest(Guid requestId, Guid communityId)
     {
-        var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var managerUserId = GetUserId();
         return await _communityService.ApproveRequestAsync(requestId, managerUserId, communityId);
     }
 
@@ -81,7 +81,7 @@ public class CommunityController : ControllerBase
     [HttpPost("{communityId}/decline-request/{requestId}")]
     public async Task<ActionResult<CommunityJoinRequestDTO>> DeclineRequest(Guid requestId, Guid communityId)
     {
-        var managerUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var managerUserId = GetUserId();
         return  await _communityService.DeclineRequestAsync(requestId, managerUserId, communityId);
     }
 
@@ -89,7 +89,7 @@ public class CommunityController : ControllerBase
     [HttpPost("{communityId}/leave")]
     public async Task<ActionResult> LeaveCommunities(Guid communityId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = GetUserId();
         await _communityService.LeaveCommunityAsync(userId, communityId);
         return Ok();
     }
@@ -97,7 +97,7 @@ public class CommunityController : ControllerBase
     [HttpGet("{communityId}/members")]
     public async Task<ActionResult<List<CommunityMemberDTO>>> GetCommunityMembers(Guid communityId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = GetUserId();
         return Ok(await _communityService.GetMembersAsync(communityId, userId));
     }
 }

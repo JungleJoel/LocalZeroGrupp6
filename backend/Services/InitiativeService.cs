@@ -60,66 +60,70 @@ public class InitiativeService : IInitiativeService
         await _database.Initiatives.AddAsync(initiative);
         await _database.SaveChangesAsync();
 
-        return initiative.Adapt<InitiativeDTO>();
+        return ToInitiativeDto(initiative, userId);
     }
 
-    public async Task<List<InitiativeDTO>> GetInitiativesAsync()
+    public async Task<List<InitiativeDTO>> GetInitiativesAsync(Guid userId)
     {
-        return (await _database.Initiatives.ToListAsync())
-            .Adapt<List<InitiativeDTO>>();
+        var initiatives = await _database.Initiatives
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
+            .ToListAsync();
+
+        return initiatives
+            .Select(i => ToInitiativeDto(i, userId))
+            .ToList();
     }
 
     public async Task<InitiativeDTO> GetInitiativeAsync(Guid initiativeId, Guid userId)
     {
-        var result = await _database.Initiatives
-            .Where(i => i.Id == initiativeId)
-            .Select(i => new
-            {
-                Initiative = i,
-                IsParticipating = i.InitiativeParticipators.Any(p => p.UserId == userId)
-            })
-            .FirstOrDefaultAsync();
-
-        if (result is null)
-            throw new NotFoundException("Initiative not found");
-
-        return result.Initiative.Adapt<InitiativeDTO>() with { IsParticipating = result.IsParticipating };
-    }
-
-    public async Task CancelInitiativeAsync(Guid inititativeId, Guid userId)
-    {
         var initiative = await _database.Initiatives
-            .FirstOrDefaultAsync(i => i.Id == inititativeId);
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
 
-        if (initiative == null)
+        if (initiative is null)
             throw new NotFoundException("Initiative not found");
-        
-        _database.Initiatives.Remove(initiative);
 
-        await _database.SaveChangesAsync();
+        return ToInitiativeDto(initiative, userId);
     }
+
+    public async Task RemoveInitiativeAsync(Guid inititativeId, Guid userId)
+{
+    var initiative = await _database.Initiatives
+        .Include(i => i.InitiativeParticipators)
+        .FirstOrDefaultAsync(i => i.Id == inititativeId);
+
+    if (initiative == null)
+        throw new NotFoundException("Initiative not found");
+
+    foreach (var participator in initiative.InitiativeParticipators)
+    {
+        await LeaveInitiativeAsync(inititativeId, participator.UserId);
+    }
+
+    _database.Initiatives.Remove(initiative);
+    await _database.SaveChangesAsync();
+}
 
     public async Task<List<InitiativeDTO>> GetByCommunityIdAsync(Guid communityId, Guid userId)
     {
         var results = await _database.Initiatives
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
             .Where(i => i.CommunityId == communityId && i.EndedAt == null)
             .OrderBy(i => i.StartsAt)
-            .Select(i => new
-            {
-                Initiative = i,
-                IsParticipating = i.InitiativeParticipators.Any(p => p.UserId == userId)
-            })
             .ToListAsync();
 
         return results
-            .Select(x => x.Initiative.Adapt<InitiativeDTO>() with { IsParticipating = x.IsParticipating })
+            .Select(i => ToInitiativeDto(i, userId))
             .ToList();
     }
 
-    public async Task EndInitiativeAsync(Guid id, Guid userId)
+    public async Task EndInitiativeAsync(Guid initiativeId, Guid userId)
     {
         var initiative = await _database.Initiatives
-            .FirstOrDefaultAsync(i => i.Id == id);
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
 
         if (initiative == null)
             throw new NotFoundException("Initiative not found");
@@ -130,9 +134,7 @@ public class InitiativeService : IInitiativeService
         if (initiative.EndedAt != null)
             throw new ConflictException("Already ended");
 
-        initiative.EndedAt = DateTime.UtcNow;
-
-        await _database.SaveChangesAsync();
+        await FinalizeInitiativeAsync(initiativeId);
     }
 
     public async Task<List<UserDTO>> GetParticipantsAsync(Guid initiativeId, Guid userId)
@@ -178,12 +180,13 @@ public class InitiativeService : IInitiativeService
         }
 
         initiative.EndedAt = DateTime.UtcNow;
+        await _database.SaveChangesAsync();
 
-        List<UserDTO> users = await GetUsersFromInitiativeAsync(initiative);
+        var participants = await GetParticipantDataAsync(initiative);
 
-        InitiativeEcoPointRequestDTO ecoPointRequest = new InitiativeEcoPointRequestDTO(
+        InitiativeEcoPointRequestDTO ecoPointRequest = new(
             initiativeId,
-            users,
+            participants,
             initiative.EcoPointsPerParticipant
         );
 
@@ -193,6 +196,8 @@ public class InitiativeService : IInitiativeService
     public async Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId)
     {
         var initiative = await _database.Initiatives
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
             .FirstOrDefaultAsync(i => i.Id == initiativeId);
         
         if (initiative == null)
@@ -214,7 +219,8 @@ public class InitiativeService : IInitiativeService
         await _database.InitiativeParticipators.AddAsync(initiativeParticipator);
         await _database.SaveChangesAsync();
         
-        return initiative.Adapt<InitiativeDTO>();
+        initiative.InitiativeParticipators.Add(initiativeParticipator);
+        return ToInitiativeDto(initiative, userId);
     }
     
     public async Task LeaveInitiativeAsync(Guid initiativeId, Guid userId)
@@ -231,21 +237,62 @@ public class InitiativeService : IInitiativeService
         await _database.SaveChangesAsync();
     }
 
-    private async Task<List<UserDTO>> GetUsersFromInitiativeAsync(Initiative initiative)
+    public async Task<InitiativeDTO> LikeInitiativeAsync(Guid initiativeId, Guid userId)
     {
-        List<UserDTO> users = new List<UserDTO>();
+        var initiative = await _database.Initiatives
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
 
-        foreach (var participant in initiative.InitiativeParticipators)
+        if (initiative == null)
+            throw new NotFoundException("Initiative not found");
+
+        if (!initiative.InitiativeLikes.Any(l => l.UserId == userId))
         {
-            var user = await _database.FindAsync<User>(participant.UserId);
-            if (user != null)
+            initiative.InitiativeLikes.Add(new InitiativeLike
             {
-                var userDto = user.Adapt<UserDTO>();
-                users.Add(userDto);
+                InitiativeId = initiativeId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            });
 
-            }
+            await _database.SaveChangesAsync();
         }
 
-        return users;
+        return ToInitiativeDto(initiative, userId);
+    }
+
+    public async Task UnlikeInitiativeAsync(Guid initiativeId, Guid userId)
+    {
+        var like = await _database.InitiativeLikes
+            .FirstOrDefaultAsync(l => l.InitiativeId == initiativeId && l.UserId == userId);
+
+        if (like == null)
+            return;
+
+        _database.InitiativeLikes.Remove(like);
+        await _database.SaveChangesAsync();
+    }
+
+    private async Task<Dictionary<Guid, Guid>> GetParticipantDataAsync(Initiative initiative)
+    {
+        var participantIds = initiative.InitiativeParticipators
+            .Select(p => p.UserId)
+            .ToList();
+
+        return await _database.CommunityResidents
+            .Where(cr => participantIds.Contains(cr.UserId))
+            .ToDictionaryAsync(cr => cr.UserId, cr => cr.CommunityId);
+    }
+
+    private static InitiativeDTO ToInitiativeDto(Initiative initiative, Guid userId)
+    {
+        return initiative.Adapt<InitiativeDTO>() with
+        {
+            IsParticipating = initiative.InitiativeParticipators.Any(p => p.UserId == userId),
+            ParticipantCount = initiative.InitiativeParticipators.Count,
+            LikeCount = initiative.InitiativeLikes.Count,
+            IsLiked = initiative.InitiativeLikes.Any(l => l.UserId == userId)
+        };
     }
 }

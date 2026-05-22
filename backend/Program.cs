@@ -69,6 +69,8 @@ builder.Services.AddScoped<EcoPointCommandInvoker>();
 builder.Services.AddScoped<IInitiativeService, InitiativeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IDirectMessageService, DirectMessageService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddHostedService<InitiativeCleanupService>();
 
 TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
 

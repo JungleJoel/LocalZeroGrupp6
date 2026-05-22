@@ -1,8 +1,6 @@
-using System.Security.Claims;
 using backend.Interfaces;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
-using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +9,7 @@ namespace backend.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class InitiativeController : ControllerBase
+public class InitiativeController : BaseController
 {
     private readonly IInitiativeService _initiativeService;
 
@@ -23,7 +21,7 @@ public class InitiativeController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<InitiativeDTO>>> GetAll()
     {
-        var initiatives = await _initiativeService.GetInitiativesAsync();
+        var initiatives = await _initiativeService.GetInitiativesAsync(GetUserId());
         return Ok(initiatives);
     }
 
@@ -57,7 +55,7 @@ public class InitiativeController : ControllerBase
     public async Task<ActionResult> Cancel(Guid id)
     {
         var userId = GetUserId();
-        await _initiativeService.CancelInitiativeAsync(id, userId);
+        await _initiativeService.RemoveInitiativeAsync(id, userId);
         return NoContent();
     }
 
@@ -90,13 +88,17 @@ public class InitiativeController : ControllerBase
         return Ok();
     }
 
-    private Guid GetUserId()
+    [HttpPost("{initiativeId}/like")]
+    public async Task<ActionResult<InitiativeDTO>> LikeInitiative(Guid initiativeId)
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdClaim))
-        {
-            throw new UnauthorizedAccessException("User ID not found in token");
-        }
-        return Guid.Parse(userIdClaim);
+        var initiative = await _initiativeService.LikeInitiativeAsync(initiativeId, GetUserId());
+        return Ok(initiative);
+    }
+
+    [HttpDelete("{initiativeId}/like")]
+    public async Task<ActionResult> UnlikeInitiative(Guid initiativeId)
+    {
+        await _initiativeService.UnlikeInitiativeAsync(initiativeId, GetUserId());
+        return NoContent();
     }
 }

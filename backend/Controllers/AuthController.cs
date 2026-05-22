@@ -1,18 +1,18 @@
 ﻿using backend.Interfaces;
 using backend.Models.DTOs;
 using backend.Models.DTOs.Requests;
-using in_pos_server_csharp.Attributes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using backend.Middleware;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly IAuthService _authService;
         private readonly IUserService _userService;
@@ -27,8 +27,7 @@ namespace backend.Controllers
         [HttpGet("check-auth")]
         public async Task<ActionResult<UserDTO>> CheckAuth()
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _userService.GetAsync(userId);
+            var user = await _userService.GetAsync(GetUserId());
             return Ok(user);
         }
 
