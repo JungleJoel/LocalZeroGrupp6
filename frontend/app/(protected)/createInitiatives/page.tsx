@@ -132,7 +132,7 @@ export default function CreateInitiative() {
                 <Label>Starts At</Label>
                 <DatePicker
                   selected={startsAt}
-                  onChange={(date) => setStartsAt(date)}
+                  onChange={(date: Date | null) => setStartsAt(date)}
                   showTimeSelect
                   timeFormat="HH:mm"
                   timeIntervals={15}
@@ -150,7 +150,7 @@ export default function CreateInitiative() {
                 <Label>Estimated Ends At</Label>
                 <DatePicker
                   selected={estimatedEndsAt}
-                  onChange={(date) => setEstimatedEndsAt(date)}
+                  onChange={(date: Date | null) => setEstimatedEndsAt(date)}
                   showTimeSelect
                   timeFormat="HH:mm"
                   timeIntervals={15}

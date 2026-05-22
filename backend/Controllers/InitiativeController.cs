@@ -21,7 +21,7 @@ public class InitiativeController : BaseController
     [HttpGet]
     public async Task<ActionResult<List<InitiativeDTO>>> GetAll()
     {
-        var initiatives = await _initiativeService.GetInitiativesAsync();
+        var initiatives = await _initiativeService.GetInitiativesAsync(GetUserId());
         return Ok(initiatives);
     }
 
@@ -85,5 +85,19 @@ public class InitiativeController : BaseController
     {
         await _initiativeService.LeaveInitiativeAsync(initiativeId, GetUserId());
         return Ok();
+    }
+
+    [HttpPost("{initiativeId}/like")]
+    public async Task<ActionResult<InitiativeDTO>> LikeInitiative(Guid initiativeId)
+    {
+        var initiative = await _initiativeService.LikeInitiativeAsync(initiativeId, GetUserId());
+        return Ok(initiative);
+    }
+
+    [HttpDelete("{initiativeId}/like")]
+    public async Task<ActionResult> UnlikeInitiative(Guid initiativeId)
+    {
+        await _initiativeService.UnlikeInitiativeAsync(initiativeId, GetUserId());
+        return NoContent();
     }
 }

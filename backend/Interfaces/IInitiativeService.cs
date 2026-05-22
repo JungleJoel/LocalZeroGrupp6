@@ -7,7 +7,7 @@ public interface IInitiativeService
 {
     Task<InitiativeDTO> CreateInitiativeAsync(Guid userId, CreateInitiativeRequestDTO request);
 
-    Task<List<InitiativeDTO>> GetInitiativesAsync();
+    Task<List<InitiativeDTO>> GetInitiativesAsync(Guid userId);
 
     Task<InitiativeDTO> GetInitiativeAsync(Guid initiativeId, Guid userId);
 
@@ -22,6 +22,10 @@ public interface IInitiativeService
     Task<InitiativeDTO> JoinInitiativeAsync(Guid initiativeId, Guid userId);
 
     Task LeaveInitiativeAsync(Guid initiativeId, Guid userId);
+
+    Task<InitiativeDTO> LikeInitiativeAsync(Guid initiativeId, Guid userId);
+
+    Task UnlikeInitiativeAsync(Guid initiativeId, Guid userId);
 
     Task<List<UserDTO>> GetParticipantsAsync(Guid initiativeId, Guid userId);
 }

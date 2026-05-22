@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 import { InitiativeDTO } from "@/types/initiativeDTO";
+import {
+  InitiativeCommentDTO,
+  createInitiativeComment,
+  getInitiativeComments,
+  likeInitiativeComment,
+  unlikeInitiativeComment,
+} from "@/lib/comments";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -13,9 +20,13 @@ import {
   MapPin,
   Lock,
   Globe,
+  Heart,
   Loader2,
+  MessageCircle,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 function getStatus(initiative: InitiativeDTO): "active" | "upcoming" | "ended" {
@@ -39,7 +50,13 @@ export default function InitiativePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoined, setIsJoined] = useState(false);
   const [isJoinLoading, setIsJoinLoading] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
+  const [comments, setComments] = useState<InitiativeCommentDTO[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [isCommentsLoading, setIsCommentsLoading] = useState(true);
+  const [isCommentPosting, setIsCommentPosting] = useState(false);
+  const [likingCommentId, setLikingCommentId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchInitiative() {
@@ -61,6 +78,21 @@ export default function InitiativePage() {
       }
     }
     fetchInitiative();
+  }, [id]);
+
+  useEffect(() => {
+    async function fetchComments() {
+      try {
+        const data = await getInitiativeComments(id);
+        setComments(data);
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsCommentsLoading(false);
+      }
+    }
+
+    fetchComments();
   }, [id]);
 
    useEffect(() => {
@@ -120,6 +152,82 @@ export default function InitiativePage() {
     }
   }
 
+  async function handlePostComment() {
+    const trimmedBody = commentBody.trim();
+    if (!trimmedBody) return;
+
+    setIsCommentPosting(true);
+    try {
+      const comment = await createInitiativeComment(id, trimmedBody);
+      setComments((current) => [...current, comment]);
+      setCommentBody("");
+      toast.success("Comment posted");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsCommentPosting(false);
+    }
+  }
+
+  async function handleLikeInitiative() {
+    if (!initiative) return;
+
+    setIsLikeLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/Initiative/${id}/like`, {
+        method: initiative.isLiked ? "DELETE" : "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error("Could not update like");
+
+      if (initiative.isLiked) {
+        setInitiative({
+          ...initiative,
+          isLiked: false,
+          likeCount: Math.max(0, initiative.likeCount - 1),
+        });
+      } else {
+        setInitiative((await response.json()) as InitiativeDTO);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLikeLoading(false);
+    }
+  }
+
+  async function handleLikeComment(comment: InitiativeCommentDTO) {
+    setLikingCommentId(comment.id);
+    try {
+      if (comment.isLiked) {
+        await unlikeInitiativeComment(id, comment.id);
+        setComments((current) =>
+          current.map((item) =>
+            item.id === comment.id
+              ? {
+                  ...item,
+                  isLiked: false,
+                  likeCount: Math.max(0, item.likeCount - 1),
+                }
+              : item
+          )
+        );
+      } else {
+        const updatedComment = await likeInitiativeComment(id, comment.id);
+        setComments((current) =>
+          current.map((item) =>
+            item.id === comment.id ? updatedComment : item
+          )
+        );
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLikingCommentId(null);
+    }
+  }
+
   const status = getStatus(initiative);
 
   return (
@@ -173,6 +281,23 @@ export default function InitiativePage() {
               )}
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            onClick={handleLikeInitiative}
+            disabled={isLikeLoading}
+            className="gap-2"
+          >
+            {isLikeLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Heart
+                className="h-4 w-4"
+                fill={initiative.isLiked ? "currentColor" : "none"}
+              />
+            )}
+            {initiative.likeCount}
+          </Button>
 
           <Button style={{ marginLeft: "auto" }}>
             {status !== "ended" ? (
@@ -296,6 +421,86 @@ export default function InitiativePage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border bg-card p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-medium text-muted-foreground">
+              Comments
+            </h2>
+          </div>
+
+          <div className="mb-5 flex flex-col gap-2">
+            <Textarea
+              placeholder="Write a comment..."
+              value={commentBody}
+              onChange={(event) => setCommentBody(event.target.value)}
+              disabled={isCommentPosting}
+              className="min-h-20"
+            />
+            <div className="flex justify-end">
+              <Button
+                onClick={handlePostComment}
+                disabled={isCommentPosting || !commentBody.trim()}
+                className="gap-2"
+              >
+                {isCommentPosting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                Post
+              </Button>
+            </div>
+          </div>
+
+          {isCommentsLoading ? (
+            <p className="text-sm text-muted-foreground">Loading comments...</p>
+          ) : comments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No comments yet. Start the conversation.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="border-t pt-4 first:border-t-0 first:pt-0">
+                  <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="text-sm font-medium">{comment.authorName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(comment.createdAt).toLocaleString("en-SE", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                    {comment.body}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleLikeComment(comment)}
+                    disabled={likingCommentId === comment.id}
+                    className="mt-2 gap-1.5 px-2 text-muted-foreground"
+                  >
+                    {likingCommentId === comment.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Heart
+                        className="h-3.5 w-3.5"
+                        fill={comment.isLiked ? "currentColor" : "none"}
+                      />
+                    )}
+                    {comment.likeCount}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
