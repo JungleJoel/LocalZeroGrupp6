@@ -28,4 +28,8 @@ public interface IInitiativeService
     Task UnlikeInitiativeAsync(Guid initiativeId, Guid userId);
 
     Task<List<UserDTO>> GetParticipantsAsync(Guid initiativeId, Guid userId);
+
+    Task<InitiativeDTO> ToggleVisibilityAsync(Guid initiativeId, Guid userId);
+
+    Task<List<InitiativeDTO>> GetPublicFromOtherCommunitiesAsync(Guid userId);
 }

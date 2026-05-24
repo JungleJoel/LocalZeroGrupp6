@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import { InitiativeDTO } from "@/types/initiativeDTO";
 import { toast } from "sonner";
-import { Calendar, Leaf, ArrowRight, Plus, Users } from "lucide-react";
+import { Calendar, Leaf, Plus, Users, Globe } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -12,8 +12,6 @@ interface CommunityInitiativesProps {
   communityId: string;
   isManager: boolean;
 }
-
-
 
 function getStatus(initiative: InitiativeDTO): "active" | "upcoming" {
   return new Date(initiative.startsAt) <= new Date() ? "active" : "upcoming";
@@ -49,7 +47,9 @@ function ParticipantCount({ initiativeId }: { initiativeId: string }) {
 
 export function CommunityInitiatives({ communityId, isManager }: CommunityInitiativesProps) {
   const [initiatives, setInitiatives] = useState<InitiativeDTO[]>([]);
+  const [publicInitiatives, setPublicInitiatives] = useState<InitiativeDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPublicLoading, setIsPublicLoading] = useState(true);
 
   useEffect(() => {
     async function fetchInitiatives() {
@@ -72,22 +72,98 @@ export function CommunityInitiatives({ communityId, isManager }: CommunityInitia
     fetchInitiatives();
   }, [communityId]);
 
+  useEffect(() => {
+    async function fetchPublicInitiatives() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/Initiative/public`, {
+          credentials: "include",
+        });
+        if (response.ok) {
+          setPublicInitiatives(await response.json());
+        }
+      } catch (error: any) {
+        toast.error(error.message);
+      } finally {
+        setIsPublicLoading(false);
+      }
+    }
+    fetchPublicInitiatives();
+  }, []);
+
+  function InitiativeGrid({ items, otherCommunity = false }: { items: InitiativeDTO[]; otherCommunity?: boolean }) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((initiative) => {
+          const status = getStatus(initiative);
+          return (
+            <Link
+              key={initiative.id}
+              href={`/community/initiative/${initiative.id}?isManager=${otherCommunity ? "false" : isManager}`}
+              className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-semibold leading-tight">{initiative.name}</h3>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    status === "active"
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                  }`}
+                >
+                  {status === "active" ? "Active" : "Upcoming"}
+                </span>
+              </div>
+
+              <p className="line-clamp-2 text-sm text-muted-foreground">
+                {initiative.description}
+              </p>
+
+              {otherCommunity && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Globe className="h-3.5 w-3.5 text-blue-500" />
+                  <span className="text-blue-600 dark:text-blue-400">Shared from another community</span>
+                </div>
+              )}
+
+              <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>
+                    {new Date(initiative.startsAt).toLocaleDateString("en-SE", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <ParticipantCount initiativeId={initiative.id} />
+                <div className="flex items-center gap-1 font-medium text-primary">
+                  <Leaf className="h-3.5 w-3.5" />
+                  <span>{initiative.ecoPointsPerParticipant} pts</span>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8">
       <div className="mb-4 flex items-center justify-between">
-  <h2 className="text-xl font-semibold">Available initiatives</h2>
-  <Link href={`/createInitiatives?communityId=${communityId}`}>
-    <Button className="h-7"><Plus className="h-4 w-4" /> Create initiative</Button> 
-  </Link>
-</div>
+        <h2 className="text-xl font-semibold">Available initiatives</h2>
+        <Link href={`/createInitiatives?communityId=${communityId}`}>
+          <Button className="h-7">
+            <Plus className="h-4 w-4" /> Create initiative
+          </Button>
+        </Link>
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-36 animate-pulse rounded-xl bg-muted"
-            />
+            <div key={i} className="h-36 animate-pulse rounded-xl bg-muted" />
           ))}
         </div>
       ) : initiatives.length === 0 ? (
@@ -96,54 +172,32 @@ export function CommunityInitiatives({ communityId, isManager }: CommunityInitia
           <p className="text-sm">No active initiatives in your community yet.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {initiatives.map((initiative) => {
-            const status = getStatus(initiative);
-            return (
-              <Link
-                key={initiative.id}
-                href={`/community/initiative/${initiative.id}?isManager=${isManager}`}
-                className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold leading-tight">{initiative.name}</h3>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      status === "active"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                    }`}
-                  >
-                    {status === "active" ? "Active" : "Upcoming"}
-                  </span>
-                </div>
-
-                <p className="line-clamp-2 text-sm text-muted-foreground">
-                  {initiative.description}
-                </p>
-
-                <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>
-                      {new Date(initiative.startsAt).toLocaleDateString("en-SE", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-                  <ParticipantCount initiativeId={initiative.id} />
-                  <div className="flex items-center gap-1 font-medium text-primary">
-                    <Leaf className="h-3.5 w-3.5" />
-                    <span>{initiative.ecoPointsPerParticipant} pts</span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        <InitiativeGrid items={initiatives} />
       )}
+
+      <div className="mt-10">
+        <div className="mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-semibold">From other communities</h2>
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+            Public
+          </span>
+        </div>
+
+        {isPublicLoading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-36 animate-pulse rounded-xl bg-muted" />
+            ))}
+          </div>
+        ) : publicInitiatives.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center text-muted-foreground">
+            <Globe className="mb-3 h-8 w-8 opacity-40" />
+            <p className="text-sm">No public initiatives from other communities.</p>
+          </div>
+        ) : (
+          <InitiativeGrid items={publicInitiatives} otherCommunity />
+        )}
+      </div>
     </div>
   );
 }

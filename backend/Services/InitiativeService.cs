@@ -295,4 +295,44 @@ public class InitiativeService : IInitiativeService
             IsLiked = initiative.InitiativeLikes.Any(l => l.UserId == userId)
         };
     }
+
+    public async Task<InitiativeDTO> ToggleVisibilityAsync(Guid initiativeId, Guid userId)
+    {
+        var initiative = await _database.Initiatives
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
+            .FirstOrDefaultAsync(i => i.Id == initiativeId);
+
+        if (initiative == null)
+            throw new NotFoundException("Initiative not found");
+
+        if (initiative.CreatedBy != userId)
+            throw new ConflictException("Not allowed");
+
+        initiative.IsPublic = !initiative.IsPublic;
+        await _database.SaveChangesAsync();
+
+        return ToInitiativeDto(initiative, userId);
+    }
+
+    public async Task<List<InitiativeDTO>> GetPublicFromOtherCommunitiesAsync(Guid userId)
+    {
+        var userCommunityIds = await _database.CommunityResidents
+            .Where(cr => cr.UserId == userId)
+            .Select(cr => cr.CommunityId)
+            .ToListAsync();
+
+        var initiatives = await _database.Initiatives
+            .Include(i => i.InitiativeLikes)
+            .Include(i => i.InitiativeParticipators)
+            .Where(i => i.IsPublic 
+                 && i.EndedAt == null 
+                 && !userCommunityIds.Contains(i.CommunityId))
+            .OrderBy(i => i.StartsAt)
+            .ToListAsync();
+
+        return initiatives
+            .Select(i => ToInitiativeDto(i, userId))
+            .ToList();
+    }
 }

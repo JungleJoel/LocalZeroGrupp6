@@ -72,6 +72,7 @@ export default function InitiativePage() {
   const [isCommentsLoading, setIsCommentsLoading] = useState(true);
   const [isCommentPosting, setIsCommentPosting] = useState(false);
   const [likingCommentId, setLikingCommentId] = useState<string | null>(null);
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
 
   useEffect(() => {
     async function fetchInitiative() {
@@ -145,6 +146,24 @@ export default function InitiativePage() {
     );
   }
 
+  async function handleToggleVisibility() {
+  if (!initiative) return;
+  setIsTogglingVisibility(true);
+  try {
+    const response = await fetch(`${API_BASE_URL}/Initiative/${id}/toggle-visibility`, {
+      method: "PATCH",
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Could not update visibility");
+    const updated: InitiativeDTO = await response.json();
+    setInitiative(updated);
+    toast.success(updated.isPublic ? "Initiative is now public" : "Initiative is now community only");
+  } catch (error: any) {
+    toast.error(error.message);
+  } finally {
+    setIsTogglingVisibility(false);
+  }
+}
  
   
   async function handleJoinLeave() {
@@ -334,6 +353,8 @@ async function handleCancel() {
             {initiative.likeCount}
           </Button>
 
+
+
           <Button style={{ marginLeft: "auto" }}>
             {status !== "ended" ? (
               <a
@@ -349,6 +370,41 @@ async function handleCancel() {
               <a>Map not Available</a>
             )}
           </Button>
+          <div className="flex items-center gap-3">
+  <div className="flex h-8 w-8 shrink-0  items-center justify-center rounded-full bg-primary/10">
+    {initiative.isPublic ? (
+      <Globe className="h-4 w-4 text-primary" />
+    ) : (
+      <Lock className="h-4 w-4 text-primary" />
+    )}
+  </div>
+  <div className="flex flex-1 mt-auto items-center justify-between gap-6">
+    <div>
+      <p className="text-xs text-muted-foreground">Visibility</p>
+      <p className="font-medium">
+        {initiative.isPublic ? "Public" : "Community only"}
+      </p>
+    </div>
+    {isManager && status !== "ended" && (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleToggleVisibility}
+        disabled={isTogglingVisibility}
+        className="gap-2"
+      >
+        {isTogglingVisibility ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : initiative.isPublic ? (
+          <Lock className="h-3.5 w-3.5" />
+        ) : (
+          <Share2 className="h-3.5 w-3.5" />
+        )}
+        {initiative.isPublic ? "Make private" : "Make public"}
+      </Button>
+    )}
+  </div>
+</div>
         </div>
 
         {/* Details */}
@@ -456,6 +512,7 @@ async function handleCancel() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
           </div>
         )}
             </div>

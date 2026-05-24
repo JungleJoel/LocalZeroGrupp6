@@ -8,6 +8,10 @@ export default function Page() {
       <Link href="/auth/login">
         <Button>/auth/login</Button>
       </Link>
+
+      <Link href="/auth/register">
+        <Button>/auth/register</Button>
+      </Link>
       <Link href="/community">
         <Button>/community (protected)</Button>
       </Link>

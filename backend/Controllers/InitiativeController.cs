@@ -88,6 +88,20 @@ public class InitiativeController : BaseController
         return Ok();
     }
 
+    [HttpPatch("{id}/toggle-visibility")]
+    public async Task<ActionResult<InitiativeDTO>> ToggleVisibility(Guid id)
+    {
+        var result = await _initiativeService.ToggleVisibilityAsync(id, GetUserId());
+        return Ok(result);
+    }
+
+    [HttpGet("public")]
+    public async Task<ActionResult<List<InitiativeDTO>>> GetPublicFromOtherCommunities()
+    {
+        var initiatives = await _initiativeService.GetPublicFromOtherCommunitiesAsync(GetUserId());
+        return Ok(initiatives);
+    }
+
     [HttpPost("{initiativeId}/like")]
     public async Task<ActionResult<InitiativeDTO>> LikeInitiative(Guid initiativeId)
     {
